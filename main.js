@@ -36,7 +36,7 @@ class GameHUD extends HTMLElement {
     }
 
     render() {
-        this.shadowRoot.innerHTML = `
+        this.shadowRoot.innerHTML = \`
             <style>
                 :host {
                     display: block;
@@ -62,18 +62,18 @@ class GameHUD extends HTMLElement {
             <div class="container">
                 <div class="stat">
                     <span class="label">Stage</span>
-                    <span class="value">${this.stage}</span>
+                    <span class="value">\${this.stage}</span>
                 </div>
                 <div class="stat">
                     <span class="label">Target</span>
-                    <span class="value color-tag">${this.currentColor}</span>
+                    <span class="value color-tag">\${this.currentColor}</span>
                 </div>
                 <div class="stat">
                     <span class="label">Score</span>
-                    <span class="value">${this.score}</span>
+                    <span class="value">\${this.score}</span>
                 </div>
             </div>
-        `;
+        \`;
     }
 }
 customElements.define('game-hud', GameHUD);
@@ -90,7 +90,7 @@ class GameOverlay extends HTMLElement {
         const buttonText = type === 'start' ? 'INITIATE' : 'REBOOT';
         const subtext = type === 'start' ? 'Protect the core. Match the colors.' : 'The orbit has been compromised.';
         
-        this.shadowRoot.innerHTML = `
+        this.shadowRoot.innerHTML = \`
             <style>
                 .content {
                     text-align: center;
@@ -121,11 +121,11 @@ class GameOverlay extends HTMLElement {
                 }
             </style>
             <div class="content">
-                <h1>${title}</h1>
-                <p>${subtext}</p>
-                <button id="actionBtn">${buttonText}</button>
+                <h1>\${title}</h1>
+                <p>\${subtext}</p>
+                <button id="actionBtn">\${buttonText}</button>
             </div>
-        `;
+        \`;
         
         this.shadowRoot.getElementById('actionBtn').onclick = () => {
             this.style.display = 'none';
@@ -167,8 +167,8 @@ class Particle {
 }
 
 class Enemy {
-    constructor(canvas, targetColor, colorIndex, stage) {
-        const radius = 12;
+    constructor(canvas, targetColor, totalMerges) {
+        const radius = 10;
         const side = Math.floor(Math.random() * 4);
         let x, y;
         
@@ -187,8 +187,8 @@ class Enemy {
             this.colorInfo = COLORS[Math.floor(Math.random() * COLORS.length)];
         }
         
-        // Speed scaling based on stage and color progress (closer to purple = faster)
-        this.speed = 1.5 + Math.random() * 1.5 + (stage * 0.5) + (colorIndex * 0.4);
+        // Speed scaling: based on total merges
+        this.speed = 1.5 + Math.random() * 1.0 + (totalMerges * 0.15);
         this.isReflected = false;
         this.target = { x: canvas.width / 2, y: canvas.height / 2 };
         this.updateVelocity();
@@ -239,20 +239,21 @@ class Game {
 
     init() {
         this.core = {
-            radius: 40,
+            radius: 25, // Smaller initial core
             colorIndex: 0,
             pulse: 0
         };
         this.shield = {
             angle: 0,
             arcLength: Math.PI * 0.4,
-            distance: 70,
-            thickness: 8
+            distance: 50, // Smaller initial orbit
+            thickness: 6
         };
         this.enemies = [];
         this.particles = [];
         this.score = 0;
         this.stage = 1;
+        this.totalMerges = 0;
         this.running = false;
         this.spawnTimer = 0;
         this.spawnRate = 120;
@@ -294,15 +295,16 @@ class Game {
 
         this.spawnTimer++;
         if (this.spawnTimer > this.spawnRate) {
-            this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], this.core.colorIndex, this.stage));
+            this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], this.totalMerges));
             this.spawnTimer = 0;
-            // Spawn Rate scaling: base 120, reduced by stage and color progress (closer to purple = more frequent)
-            this.spawnRate = Math.max(25, 120 - (this.stage * 10) - (this.core.colorIndex * 15));
+            // Spawn Rate scaling: based on total merges
+            this.spawnRate = Math.max(20, 120 - (this.totalMerges * 2));
         }
 
         const angle = Math.atan2(this.mouse.y - this.center.y, this.mouse.x - this.center.x);
         this.shield.angle = angle;
-        this.shield.distance = this.core.radius + 25;
+        // Orbit scales dynamically with core
+        this.shield.distance = this.core.radius + 20;
 
         this.particles = this.particles.filter(p => {
             p.update();
@@ -332,7 +334,8 @@ class Game {
             if (dist < this.core.radius + enemy.radius) {
                 if (enemy.colorInfo.name === COLORS[this.core.colorIndex].name) {
                     this.score += 10;
-                    this.core.radius *= 1.05;
+                    this.totalMerges++;
+                    this.core.radius *= 1.05; // Core grows
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     
@@ -355,7 +358,7 @@ class Game {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         const coreColor = COLORS[this.core.colorIndex].value;
-        const pulseSize = Math.sin(this.core.pulse) * 5;
+        const pulseSize = Math.sin(this.core.pulse) * (this.core.radius * 0.1);
         
         this.ctx.save();
         this.ctx.shadowBlur = 30 + pulseSize;
