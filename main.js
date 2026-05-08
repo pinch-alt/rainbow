@@ -167,7 +167,7 @@ class Particle {
 }
 
 class Enemy {
-    constructor(canvas, targetColor) {
+    constructor(canvas, targetColor, colorIndex, stage) {
         const radius = 12;
         const side = Math.floor(Math.random() * 4);
         let x, y;
@@ -187,7 +187,8 @@ class Enemy {
             this.colorInfo = COLORS[Math.floor(Math.random() * COLORS.length)];
         }
         
-        this.speed = 1.5 + Math.random() * 1.5;
+        // Speed scaling based on stage and color progress (closer to purple = faster)
+        this.speed = 1.5 + Math.random() * 1.5 + (stage * 0.5) + (colorIndex * 0.4);
         this.isReflected = false;
         this.target = { x: canvas.width / 2, y: canvas.height / 2 };
         this.updateVelocity();
@@ -293,9 +294,10 @@ class Game {
 
         this.spawnTimer++;
         if (this.spawnTimer > this.spawnRate) {
-            this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex]));
+            this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], this.core.colorIndex, this.stage));
             this.spawnTimer = 0;
-            this.spawnRate = Math.max(40, 120 - this.stage * 5);
+            // Spawn Rate scaling: base 120, reduced by stage and color progress (closer to purple = more frequent)
+            this.spawnRate = Math.max(25, 120 - (this.stage * 10) - (this.core.colorIndex * 15));
         }
 
         const angle = Math.atan2(this.mouse.y - this.center.y, this.mouse.x - this.center.x);
