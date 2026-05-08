@@ -62,15 +62,15 @@ class GameHUD extends HTMLElement {
             <div class="container">
                 <div class="stat">
                     <span class="label">Stage</span>
-                    <span class="value">\${this.stage}</span>
+                    <span class="value">${this.stage}</span>
                 </div>
                 <div class="stat">
                     <span class="label">Target</span>
-                    <span class="value color-tag">\${this.currentColor}</span>
+                    <span class="value color-tag">${this.currentColor}</span>
                 </div>
                 <div class="stat">
                     <span class="label">Score</span>
-                    <span class="value">\${this.score}</span>
+                    <span class="value">${this.score}</span>
                 </div>
             </div>
         \`;
@@ -84,11 +84,19 @@ class GameOverlay extends HTMLElement {
         this.attachShadow({ mode: 'open' });
     }
 
-    show(type, callback) {
+    show(type, callback, finalScore = null) {
         this.style.display = 'flex';
-        const title = type === 'start' ? 'RAINBOW ORBIT' : 'CORE BREACH';
-        const buttonText = type === 'start' ? 'INITIATE' : 'REBOOT';
-        const subtext = type === 'start' ? 'Protect the core. Match the colors.' : 'The orbit has been compromised.';
+        const isStart = type === 'start';
+        const title = isStart ? 'RAINBOW ORBIT' : 'CORE BREACH';
+        const buttonText = isStart ? 'INITIATE' : 'REBOOT';
+        
+        let subtext = isStart 
+            ? 'Protect the core. Match the colors.' 
+            : 'The orbit has been compromised.';
+        
+        if (finalScore !== null) {
+            subtext = `Final Score: <span style="color: white; font-weight: 900; font-size: 2rem;">${finalScore}</span><br>${subtext}`;
+        }
         
         this.shadowRoot.innerHTML = \`
             <style>
@@ -121,9 +129,9 @@ class GameOverlay extends HTMLElement {
                 }
             </style>
             <div class="content">
-                <h1>\${title}</h1>
-                <p>\${subtext}</p>
-                <button id="actionBtn">\${buttonText}</button>
+                <h1>${title}</h1>
+                <p>${subtext}</p>
+                <button id="actionBtn">${buttonText}</button>
             </div>
         \`;
         
@@ -239,14 +247,14 @@ class Game {
 
     init() {
         this.core = {
-            radius: 25, // Smaller initial core
+            radius: 25,
             colorIndex: 0,
             pulse: 0
         };
         this.shield = {
             angle: 0,
             arcLength: Math.PI * 0.4,
-            distance: 50, // Smaller initial orbit
+            distance: 50,
             thickness: 6
         };
         this.enemies = [];
@@ -257,6 +265,9 @@ class Game {
         this.running = false;
         this.spawnTimer = 0;
         this.spawnRate = 120;
+
+        // Reset HUD
+        this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name);
     }
 
     resize() {
@@ -273,7 +284,8 @@ class Game {
 
     gameOver() {
         this.running = false;
-        this.overlay.show('gameover', () => this.start());
+        // Pass the final score to the overlay
+        this.overlay.show('gameover', () => this.start(), this.score);
     }
 
     createExplosion(x, y, color) {
