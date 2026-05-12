@@ -6,39 +6,24 @@
 ## 2. Detailed Outline & Current State
 
 ### Visual Design & Aesthetics
-*   **Color Palette:** Utilizing `oklch` for ultra-vibrant, perceptually uniform colors (Red, Orange, Yellow, Green, Blue, Purple).
-*   **Effects:** 
-    *   **Glow:** Interactive elements (shield, circles) feature dynamic outer glows.
-    *   **Depth:** Multi-layered drop shadows on UI elements.
-    *   **Texture:** Subtle noise texture on the background for a premium feel.
-*   **Typography:** Expressive fonts for hero text and HUD.
+*   **Color Palette:** Utilizing `oklch` for ultra-vibrant, perceptually uniform colors.
+*   **Effects:** Glow, Depth (shadows), and Texture (noise) for a premium feel.
 
 ### Features
-*   **Evolving Core:** The central circle changes color in the rainbow sequence (Red -> Purple) upon successful absorption of matching colors.
-*   **Kinetic Shield:** A mouse/touch-controlled arc that reflects non-matching colors.
-*   **Constant Speed Physics:** Enemies move at a strictly constant speed, regardless of interaction state or reflection.
-*   **Unified Render Engine:** Logic and rendering are synced via `requestAnimationFrame` for maximum performance and to prevent browser throttling.
-*   **Delta Time Integration:** All physical calculations use delta time (dt), ensuring consistent movement speed.
-*   **Web Component UI:** HUD and Menus are encapsulated in Custom Elements.
+*   **Evolving Core:** Central circle changes color in the rainbow sequence.
+*   **Kinetic Shield:** Mouse/touch-controlled arc for reflection.
+*   **Progressive Speed Physics:** Enemies move at a constant speed per instance, but the base speed increases as the player merges more colors.
+*   **Dynamic Difficulty:** Both spawn rate and enemy speed scale with `totalMerges`.
+*   **Unified Render Engine:** Sync via `requestAnimationFrame` for maximum performance.
 
 ## 3. Implementation Plan (Phase 2: Modernization)
 
-### Step 1: Web Component UI
-*   Create a `<game-hud>` component to display the current stage and score.
-*   Create a `<game-overlay>` component for Start and Game Over screens.
-
-### Step 3: Advanced Rendering (main.js)
-*   Refactor to a class-based architecture.
-*   Implement `oklch` color transitions and particle systems.
-
 ### Step 4: Physics & Collision Refinement
-*   **Speed Optimization:** Ensure enemies maintain constant velocity.
-*   **Loop Unification:** Migrate from `setInterval` to `requestAnimationFrame` for the main loop.
+*   **Speed Scaling:** Increase enemy speed based on `totalMerges`.
+*   **Difficulty Balancing:** Fine-tune the speed and spawn rate curves for a challenging experience.
 
-### Step 5: Styling & Textures
-*   Update `style.css` with background textures and CSS variables.
-
-## 4. Current Task: Ensuring Constant Ball Speed & Performance
-*   Refactor the game loop to use `requestAnimationFrame` only.
-*   Fix `Enemy` reflection logic to maintain constant speed magnitude (1.0x factor).
-*   Ensure smooth, non-throttled movement even when input is idle.
+## 4. Current Task: Implementing Progressive Speed Scaling
+*   Update `Enemy` class to accept a dynamic `speed` parameter.
+*   Calculate `baseSpeed` in the `Game` class based on `totalMerges`.
+*   Increase the starting base speed for a more engaging beginning.
+*   Commit and push changes.

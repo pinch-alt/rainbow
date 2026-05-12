@@ -319,17 +319,20 @@ class Game {
 
         requestAnimationFrame((t) => this.gameLoop(t));
     }
+update(dt) {
+    const factor = dt * 60;
+    this.core.pulse += 0.05 * factor;
 
-    update(dt) {
-        const factor = dt * 60;
-        this.core.pulse += 0.05 * factor;
+    this.spawnTimer += dt;
+    if (this.spawnTimer > this.spawnRate) {
+        // Calculate dynamic speed: starting at 180, increasing by 5 per merge
+        const currentSpeed = 180 + (this.totalMerges * 5);
+        this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], currentSpeed));
+        this.spawnTimer = 0;
+        // Progressive spawn rate (faster over time)
+        this.spawnRate = Math.max(0.33, 2.0 - (this.totalMerges * 0.033));
+    }
 
-        this.spawnTimer += dt;
-        if (this.spawnTimer > this.spawnRate) {
-            this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], this.totalMerges));
-            this.spawnTimer = 0;
-            this.spawnRate = Math.max(0.33, 2.0 - (this.totalMerges * 0.033));
-        }
 
         const angle = Math.atan2(this.mouse.y - this.center.y, this.mouse.x - this.center.x);
         this.shield.angle = angle;
