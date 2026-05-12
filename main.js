@@ -237,14 +237,13 @@ class Game {
         this.resize();
         window.addEventListener('resize', () => this.resize());
         
-        this.mouse = { x: 0, y: 0 };
+        this.mouse = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
         window.addEventListener('mousemove', (e) => {
             this.mouse.x = e.clientX;
             this.mouse.y = e.clientY;
         });
 
         const handleTouch = (e) => {
-            // Prevent scrolling on mobile while playing
             if (this.running) e.preventDefault();
             if (e.touches.length > 0) {
                 this.mouse.x = e.touches[0].clientX;
@@ -289,26 +288,14 @@ class Game {
     }
 
     start() {
-        if (this.updateInterval) clearInterval(this.updateInterval);
         this.init();
         this.running = true;
         this.lastTime = performance.now();
-        
-        // Logical update loop (fixed-ish step to avoid browser throttling)
-        this.updateInterval = setInterval(() => {
-            const now = performance.now();
-            const dt = (now - this.lastTime) / 1000;
-            this.lastTime = now;
-            this.update(dt);
-        }, 1000 / 60);
-
-        // Visual render loop
-        requestAnimationFrame(() => this.renderLoop());
+        requestAnimationFrame((t) => this.gameLoop(t));
     }
 
     gameOver() {
         this.running = false;
-        if (this.updateInterval) clearInterval(this.updateInterval);
         this.overlay.show('gameover', () => this.start(), this.score);
     }
 
@@ -318,16 +305,22 @@ class Game {
         }
     }
 
-    renderLoop() {
+    gameLoop(currentTime) {
         if (!this.running) return;
+
+        let dt = (currentTime - this.lastTime) / 1000;
+        this.lastTime = currentTime;
+
+        // Cap dt to prevent huge jumps on tab switch
+        if (dt > 0.1) dt = 0.1;
+
+        this.update(dt);
         this.draw();
-        requestAnimationFrame(() => this.renderLoop());
+
+        requestAnimationFrame((t) => this.gameLoop(t));
     }
 
     update(dt) {
-        // Fix for large dt (e.g. tab switching)
-        if (dt > 0.1) dt = 0.1;
-
         const factor = dt * 60;
         this.core.pulse += 0.05 * factor;
 
@@ -335,7 +328,6 @@ class Game {
         if (this.spawnTimer > this.spawnRate) {
             this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], this.totalMerges));
             this.spawnTimer = 0;
-            // Progressive spawn rate (faster over time)
             this.spawnRate = Math.max(0.33, 2.0 - (this.totalMerges * 0.033));
         }
 
@@ -363,9 +355,9 @@ class Game {
                 dist < this.shield.distance + enemy.radius && dist > this.shield.distance - 15) {
                 
                 enemy.isReflected = true;
-                // Reflection still increases speed proportionally
-                enemy.vx = -enemy.vx * 1.5;
-                enemy.vy = -enemy.vy * 1.5;
+                // Keep speed magnitude constant on reflection (1.0x instead of 1.5x)
+                enemy.vx = -enemy.vx;
+                enemy.vy = -enemy.vy;
                 this.createExplosion(enemy.x, enemy.y, '#ffffff');
             }
 

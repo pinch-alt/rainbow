@@ -15,10 +15,10 @@
 
 ### Features
 *   **Evolving Core:** The central circle changes color in the rainbow sequence (Red -> Purple) upon successful absorption of matching colors.
-*   **Kinetic Shield:** A mouse-controlled arc that reflects non-matching colors with physical feedback.
-*   **Progressive Difficulty:** Spawn rates increase as the core grows, while incoming circle speed remains constant for a fair, high-speed experience.
-*   **Decoupled Engine:** The game logic runs on a high-precision `setInterval` loop to prevent browser power-saving throttling when user input is idle, while rendering stays synced with `requestAnimationFrame`.
-*   **Delta Time Integration:** All physical calculations use delta time (dt), ensuring consistent movement speed regardless of frame rate fluctuations or system performance.
+*   **Kinetic Shield:** A mouse/touch-controlled arc that reflects non-matching colors.
+*   **Constant Speed Physics:** Enemies move at a strictly constant speed, regardless of interaction state or reflection.
+*   **Unified Render Engine:** Logic and rendering are synced via `requestAnimationFrame` for maximum performance and to prevent browser throttling.
+*   **Delta Time Integration:** All physical calculations use delta time (dt), ensuring consistent movement speed.
 *   **Web Component UI:** HUD and Menus are encapsulated in Custom Elements.
 
 ## 3. Implementation Plan (Phase 2: Modernization)
@@ -28,20 +28,17 @@
 *   Create a `<game-overlay>` component for Start and Game Over screens.
 
 ### Step 3: Advanced Rendering (main.js)
-*   Refactor to a class-based architecture (`Game`, `Core`, `Shield`, `Enemy`).
-*   Implement `oklch` color transitions.
-*   Add a Particle System for collisions and merges.
-*   Implement "Bloom" effect using shadowBlur on Canvas.
+*   Refactor to a class-based architecture.
+*   Implement `oklch` color transitions and particle systems.
 
 ### Step 4: Physics & Collision Refinement
-*   Improve shield reflection logic (proper vector reflection).
-*   Add "screenshake" effect on game over.
+*   **Speed Optimization:** Ensure enemies maintain constant velocity.
+*   **Loop Unification:** Migrate from `setInterval` to `requestAnimationFrame` for the main loop.
 
 ### Step 5: Styling & Textures
-*   Update `style.css` with background textures and CSS variables for the palette.
-*   Use Cascade Layers (`@layer`) to organize styles.
+*   Update `style.css` with background textures and CSS variables.
 
-## 4. Current Task: Implementing Touch Support & Git Deployment
-*   Add touch event listeners (`touchstart`, `touchmove`) to `main.js` for mobile control.
-*   Ensure the shield responds to both mouse and touch inputs.
-*   Initialize/Commit changes and prepare for deployment.
+## 4. Current Task: Ensuring Constant Ball Speed & Performance
+*   Refactor the game loop to use `requestAnimationFrame` only.
+*   Fix `Enemy` reflection logic to maintain constant speed magnitude (1.0x factor).
+*   Ensure smooth, non-throttled movement even when input is idle.
