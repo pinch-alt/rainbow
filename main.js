@@ -158,10 +158,11 @@ class Particle {
         this.decay = Math.random() * 0.02 + 0.02;
     }
 
-    update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        this.life -= this.decay;
+    update(dt) {
+        const factor = dt * 60;
+        this.x += this.speedX * factor;
+        this.y += this.speedY * factor;
+        this.life -= this.decay * factor;
     }
 
     draw(ctx) {
@@ -196,7 +197,8 @@ class Enemy {
             this.colorInfo = COLORS[Math.floor(Math.random() * COLORS.length)];
         }
         
-        this.speed = 1.5 + Math.random() * 1.0 + (totalMerges * 0.15);
+        // Strictly constant speed (pixels per second)
+        this.speed = 150; 
         this.isReflected = false;
         this.target = { x: canvas.width / 2, y: canvas.height / 2 };
         this.updateVelocity();
@@ -208,9 +210,9 @@ class Enemy {
         this.vy = Math.sin(angle) * this.speed;
     }
 
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
+    update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
     }
 
     draw(ctx) {
@@ -241,6 +243,17 @@ class Game {
             this.mouse.y = e.clientY;
         });
 
+        const handleTouch = (e) => {
+            // Prevent scrolling on mobile while playing
+            if (this.running) e.preventDefault();
+            if (e.touches.length > 0) {
+                this.mouse.x = e.touches[0].clientX;
+                this.mouse.y = e.touches[0].clientY;
+            }
+        };
+        window.addEventListener('touchstart', handleTouch, { passive: false });
+        window.addEventListener('touchmove', handleTouch, { passive: false });
+
         this.init();
         this.overlay.show('start', () => this.start());
     }
@@ -264,7 +277,7 @@ class Game {
         this.totalMerges = 0;
         this.running = false;
         this.spawnTimer = 0;
-        this.spawnRate = 120;
+        this.spawnRate = 2.0; // Seconds
 
         this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name);
     }
@@ -276,13 +289,26 @@ class Game {
     }
 
     start() {
+        if (this.updateInterval) clearInterval(this.updateInterval);
         this.init();
         this.running = true;
-        this.loop();
+        this.lastTime = performance.now();
+        
+        // Logical update loop (fixed-ish step to avoid browser throttling)
+        this.updateInterval = setInterval(() => {
+            const now = performance.now();
+            const dt = (now - this.lastTime) / 1000;
+            this.lastTime = now;
+            this.update(dt);
+        }, 1000 / 60);
+
+        // Visual render loop
+        requestAnimationFrame(() => this.renderLoop());
     }
 
     gameOver() {
         this.running = false;
+        if (this.updateInterval) clearInterval(this.updateInterval);
         this.overlay.show('gameover', () => this.start(), this.score);
     }
 
@@ -292,22 +318,25 @@ class Game {
         }
     }
 
-    loop() {
+    renderLoop() {
         if (!this.running) return;
-
-        this.update();
         this.draw();
-        requestAnimationFrame(() => this.loop());
+        requestAnimationFrame(() => this.renderLoop());
     }
 
-    update() {
-        this.core.pulse += 0.05;
+    update(dt) {
+        // Fix for large dt (e.g. tab switching)
+        if (dt > 0.1) dt = 0.1;
 
-        this.spawnTimer++;
+        const factor = dt * 60;
+        this.core.pulse += 0.05 * factor;
+
+        this.spawnTimer += dt;
         if (this.spawnTimer > this.spawnRate) {
             this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], this.totalMerges));
             this.spawnTimer = 0;
-            this.spawnRate = Math.max(20, 120 - (this.totalMerges * 2));
+            // Progressive spawn rate (faster over time)
+            this.spawnRate = Math.max(0.33, 2.0 - (this.totalMerges * 0.033));
         }
 
         const angle = Math.atan2(this.mouse.y - this.center.y, this.mouse.x - this.center.x);
@@ -315,17 +344,17 @@ class Game {
         this.shield.distance = this.core.radius + 20;
 
         this.particles = this.particles.filter(p => {
-            p.update();
+            p.update(dt);
             return p.life > 0;
         });
 
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
-            enemy.update();
+            enemy.update(dt);
 
             const dist = Math.hypot(enemy.x - this.center.x, enemy.y - this.center.y);
-
             const enemyAngle = Math.atan2(enemy.y - this.center.y, enemy.x - this.center.x);
+            
             let diff = enemyAngle - this.shield.angle;
             while (diff < -Math.PI) diff += Math.PI * 2;
             while (diff > Math.PI) diff -= Math.PI * 2;
@@ -334,6 +363,7 @@ class Game {
                 dist < this.shield.distance + enemy.radius && dist > this.shield.distance - 15) {
                 
                 enemy.isReflected = true;
+                // Reflection still increases speed proportionally
                 enemy.vx = -enemy.vx * 1.5;
                 enemy.vy = -enemy.vy * 1.5;
                 this.createExplosion(enemy.x, enemy.y, '#ffffff');

@@ -16,7 +16,9 @@
 ### Features
 *   **Evolving Core:** The central circle changes color in the rainbow sequence (Red -> Purple) upon successful absorption of matching colors.
 *   **Kinetic Shield:** A mouse-controlled arc that reflects non-matching colors with physical feedback.
-*   **Progressive Difficulty:** Spawn rates and speeds increase as the core grows.
+*   **Progressive Difficulty:** Spawn rates increase as the core grows, while incoming circle speed remains constant for a fair, high-speed experience.
+*   **Decoupled Engine:** The game logic runs on a high-precision `setInterval` loop to prevent browser power-saving throttling when user input is idle, while rendering stays synced with `requestAnimationFrame`.
+*   **Delta Time Integration:** All physical calculations use delta time (dt), ensuring consistent movement speed regardless of frame rate fluctuations or system performance.
 *   **Web Component UI:** HUD and Menus are encapsulated in Custom Elements.
 
 ## 3. Implementation Plan (Phase 2: Modernization)
@@ -39,7 +41,7 @@
 *   Update `style.css` with background textures and CSS variables for the palette.
 *   Use Cascade Layers (`@layer`) to organize styles.
 
-## 4. Current Task: Implementing the Modernized Core & UI
-*   Define the Web Components.
-*   Restructure `main.js` into the new class-based system.
-*   Apply the visual polish.
+## 4. Current Task: Implementing Touch Support & Git Deployment
+*   Add touch event listeners (`touchstart`, `touchmove`) to `main.js` for mobile control.
+*   Ensure the shield responds to both mouse and touch inputs.
+*   Initialize/Commit changes and prepare for deployment.
