@@ -147,7 +147,7 @@ class Game {
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
         this.running = false; this.spawnTimer = 0; this.spawnRate = 0.25;
         if (this.hud && typeof this.hud.update === 'function') {
-            this.hud.update(this.score, this.stage, COLORS[0].name, 650);
+            this.hud.update(this.score, this.stage, COLORS[0].name, 325);
         }
     }
 
@@ -176,7 +176,7 @@ class Game {
     update(dt) {
         this.gameTime += dt;
         this.core.pulse += 3 * dt;
-        const speed = 650 + (this.totalMerges * 60) + (this.gameTime * 15);
+        const speed = 325 + (this.totalMerges * 60) + (this.gameTime * 15);
         this.spawnTimer += dt;
         if (this.spawnTimer > this.spawnRate) {
             this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], speed));
