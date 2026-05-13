@@ -12,18 +12,17 @@
 ### Features
 *   **Evolving Core:** Central circle changes color in the rainbow sequence.
 *   **Kinetic Shield:** Mouse/touch-controlled arc for reflection.
-*   **Progressive Speed Physics:** Enemies move at a constant speed per instance, but the base speed increases as the player merges more colors.
-*   **Dynamic Difficulty:** Both spawn rate and enemy speed scale with `totalMerges`.
+*   **Real-Time Progressive Speed Physics:** Enemies speed up dynamically based on merges and time elapsed.
+*   **Dynamic Difficulty:** Both spawn rate and enemy speed scale with `totalMerges` and `gameTime`.
 *   **Unified Render Engine:** Sync via `requestAnimationFrame` for maximum performance.
 
 ## 3. Implementation Plan (Phase 2: Modernization)
 
-### Step 4: Physics & Collision Refinement
-*   **Speed Scaling:** Increase enemy speed based on `totalMerges`.
-*   **Difficulty Balancing:** Fine-tune the speed and spawn rate curves for a challenging experience.
+### Step 4: Physics & Collision Refinement (Optimized)
+*   **Dynamic Speed Scaling:** Implemented `getCurrentSpeed()` which combines base speed, merge bonuses (+45), and time bonuses (+8/sec).
+*   **Real-Time Updates:** Enemies now update their velocity every frame to reflect global speed changes immediately.
+*   **Spawn Rate Acceleration:** Spawn rate now decreases over time and with merges for a more intense experience.
 
-## 4. Current Task: Implementing Progressive Speed Scaling
-*   Update `Enemy` class to accept a dynamic `speed` parameter.
-*   Calculate `baseSpeed` in the `Game` class based on `totalMerges`.
-*   Increase the starting base speed for a more engaging beginning.
-*   Commit and push changes.
+## 4. Current State: Dynamic Real-Time Physics
+*   The issue where speed didn't seem to increase has been resolved by making speed updates real-time and continuous.
+*   Difficulty curve is now exponential-like, providing a much more challenging and satisfying progression.
