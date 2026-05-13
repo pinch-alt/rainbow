@@ -1,46 +1,39 @@
 /**
  * Rainbow Orbit: A modern, high-performance web game.
+ * Robust Version for maximum compatibility.
  */
 
+// Fallback to standard colors if oklch is problematic
 const COLORS = [
-    { name: 'Red',    value: 'oklch(65% 0.25 20)',   hue: 20 },
-    { name: 'Orange', value: 'oklch(70% 0.2 50)',    hue: 50 },
-    { name: 'Yellow', value: 'oklch(85% 0.2 90)',    hue: 90 },
-    { name: 'Green',  value: 'oklch(75% 0.2 140)',   hue: 140 },
-    { name: 'Blue',   value: 'oklch(60% 0.2 250)',   hue: 250 },
-    { name: 'Purple', value: 'oklch(60% 0.2 300)',   hue: 300 }
+    { name: 'Red',    value: '#ff4d4d', hue: 0 },
+    { name: 'Orange', value: '#ffa64d', hue: 30 },
+    { name: 'Yellow', value: '#ffff4d', hue: 60 },
+    { name: 'Green',  value: '#4dff4d', hue: 120 },
+    { name: 'Blue',   value: '#4d4dff', hue: 240 },
+    { name: 'Purple', value: '#a64dff', hue: 280 }
 ];
 
 class GameHUD extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.score = 0;
-        this.stage = 1;
-        this.speed = 0;
-        this.currentColor = COLORS[0].name;
+        this.score = 0; this.stage = 1; this.speed = 0; this.currentColor = COLORS[0].name;
     }
-
-    connectedCallback() { this.render(); }
-
     update(score, stage, color, speed) {
-        this.score = score;
-        this.stage = stage;
-        this.currentColor = color;
-        this.speed = Math.floor(speed);
+        this.score = score; this.stage = stage; this.currentColor = color; this.speed = Math.floor(speed);
         this.render();
     }
-
     render() {
+        if (!this.shadowRoot) return;
         this.shadowRoot.innerHTML = \`
             <style>
-                :host { display: block; font-family: 'Outfit', sans-serif; color: white; text-align: center; }
+                :host { display: block; font-family: 'Outfit', sans-serif; color: white; }
                 .container {
                     display: flex; gap: 1.5rem; background: rgba(255, 255, 255, 0.1);
                     padding: 0.5rem 1.5rem; border-radius: 2rem; backdrop-filter: blur(10px);
                     border: 1px solid rgba(255, 255, 255, 0.2);
                 }
-                .stat { display: flex; flex-direction: column; }
+                .stat { display: flex; flex-direction: column; text-align: center; }
                 .label { font-size: 0.6rem; text-transform: uppercase; opacity: 0.7; letter-spacing: 0.1rem; }
                 .value { font-size: 1.2rem; font-weight: 900; }
                 .speed-val { color: #00ffcc; }
@@ -53,16 +46,13 @@ class GameHUD extends HTMLElement {
             </div>\`;
     }
 }
-customElements.define('game-hud', GameHUD);
 
 class GameOverlay extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
     }
-
     show(type, callback, finalScore = null) {
-        this.style.display = 'flex';
         const isStart = type === 'start';
         const title = isStart ? 'RAINBOW ORBIT' : 'CORE BREACH';
         let subtext = isStart ? 'Protect the core. Match the colors.' : 'The orbit has been compromised.';
@@ -70,26 +60,36 @@ class GameOverlay extends HTMLElement {
         
         this.shadowRoot.innerHTML = \`
             <style>
-                .overlay-content { text-align: center; color: rgba(255, 255, 255, 0.8); }
-                h1 { font-size: 4rem; font-weight: 900; margin: 0; color: white; }
+                .overlay-content { text-align: center; color: rgba(255, 255, 255, 0.8); font-family: 'Outfit', sans-serif; }
+                h1 { font-size: 4rem; font-weight: 900; margin: 0; color: white; letter-spacing: -2px; }
                 p { font-size: 1.2rem; margin: 1.5rem 0 2.5rem; }
                 button {
                     background: white; color: black; border: none; padding: 1rem 3rem;
                     font-size: 1.2rem; font-weight: 900; border-radius: 0.5rem; cursor: pointer;
                     font-family: 'Outfit', sans-serif; box-shadow: 0 0 20px rgba(255,255,255,0.3);
+                    transition: transform 0.2s;
                 }
+                button:hover { transform: scale(1.05); }
             </style>
             <div class="overlay-content"><h1>\${title}</h1><p>\${subtext}</p><button id="actionBtn">\${isStart ? 'INITIATE' : 'REBOOT'}</button></div>\`;
-        this.shadowRoot.getElementById('actionBtn').onclick = () => { this.style.display = 'none'; callback(); };
+        this.shadowRoot.getElementById('actionBtn').onclick = () => {
+            this.style.visibility = 'hidden';
+            callback();
+        };
+        this.style.visibility = 'visible';
+        this.style.display = 'flex';
     }
 }
-customElements.define('game-overlay', GameOverlay);
+
+// Register elements only if not already defined
+if (!customElements.get('game-hud')) customElements.define('game-hud', GameHUD);
+if (!customElements.get('game-overlay')) customElements.define('game-overlay', GameOverlay);
 
 class Enemy {
     constructor(canvas, targetColor, speed) {
         const radius = 10;
         const side = Math.floor(Math.random() * 4);
-        const stagger = Math.random() * 150; 
+        const stagger = Math.random() * 150;
         if (side === 0) { this.x = Math.random() * canvas.width; this.y = -radius - stagger; }
         else if (side === 1) { this.x = canvas.width + radius + stagger; this.y = Math.random() * canvas.height; }
         else if (side === 2) { this.x = Math.random() * canvas.width; this.y = canvas.height + radius + stagger; }
@@ -97,24 +97,19 @@ class Enemy {
 
         this.radius = radius;
         this.colorInfo = Math.random() < 0.4 ? targetColor : COLORS[Math.floor(Math.random() * COLORS.length)];
-        this.speed = speed; 
+        this.speed = speed;
         this.isReflected = false;
         this.angle = Math.atan2(canvas.height / 2 - this.y, canvas.width / 2 - this.x);
-        this.updateVelocity();
-    }
-
-    updateVelocity() {
         this.vx = Math.cos(this.angle) * this.speed;
         this.vy = Math.sin(this.angle) * this.speed;
     }
-
-    update(dt, currentGlobalSpeed) {
-        this.speed = currentGlobalSpeed;
-        this.updateVelocity();
+    update(dt, speed) {
+        this.speed = speed;
+        this.vx = Math.cos(this.angle) * this.speed;
+        this.vy = Math.sin(this.angle) * this.speed;
         this.x += this.vx * dt;
         this.y += this.vy * dt;
     }
-
     draw(ctx) {
         ctx.save();
         ctx.shadowBlur = 8; ctx.shadowColor = this.colorInfo.value;
@@ -127,32 +122,45 @@ class Enemy {
 class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) { console.error('Canvas not found'); return; }
         this.ctx = this.canvas.getContext('2d');
         this.hud = document.getElementById('hud');
         this.overlay = document.getElementById('overlay');
+        
         this.resize();
         window.addEventListener('resize', () => this.resize());
         this.mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
         window.addEventListener('mousemove', (e) => { this.mouse.x = e.clientX; this.mouse.y = e.clientY; });
+        
         this.init();
-        this.overlay.show('start', () => this.start());
+        if (this.overlay) {
+            this.overlay.show('start', () => this.start());
+        } else {
+            console.error('Overlay not found');
+            this.start(); // Emergency start if overlay fails
+        }
     }
 
     init() {
         this.core = { radius: 25, colorIndex: 0, pulse: 0 };
         this.shield = { angle: 0, arcLength: Math.PI * 0.4, distance: 45, thickness: 6 };
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
-        this.running = false; this.spawnTimer = 0; this.spawnRate = 0.25; 
-        this.hud.update(this.score, this.stage, COLORS[0].name, 650);
+        this.running = false; this.spawnTimer = 0; this.spawnRate = 0.25;
+        if (this.hud && typeof this.hud.update === 'function') {
+            this.hud.update(this.score, this.stage, COLORS[0].name, 650);
+        }
     }
 
     resize() {
-        this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight;
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
         this.center = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
     }
 
     start() {
-        this.init(); this.running = true; this.lastTime = performance.now();
+        this.init();
+        this.running = true;
+        this.lastTime = performance.now();
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
@@ -160,12 +168,14 @@ class Game {
         if (!this.running) return;
         let dt = Math.min((currentTime - this.lastTime) / 1000, 0.05);
         this.lastTime = currentTime;
-        this.update(dt); this.draw();
+        this.update(dt);
+        this.draw();
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
     update(dt) {
-        this.gameTime += dt; this.core.pulse += 3 * dt;
+        this.gameTime += dt;
+        this.core.pulse += 3 * dt;
         const speed = 650 + (this.totalMerges * 60) + (this.gameTime * 15);
         this.spawnTimer += dt;
         if (this.spawnTimer > this.spawnRate) {
@@ -190,12 +200,18 @@ class Game {
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     this.enemies.splice(i, 1);
-                } else { this.running = false; this.overlay.show('gameover', () => this.start(), this.score); return; }
+                } else {
+                    this.running = false;
+                    if (this.overlay) this.overlay.show('gameover', () => this.start(), this.score);
+                    return;
+                }
             } else if (e.isReflected && (e.x < -200 || e.x > this.canvas.width + 200 || e.y < -200 || e.y > this.canvas.height + 200)) {
                 this.enemies.splice(i, 1);
             }
         }
-        this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name, speed);
+        if (this.hud && typeof this.hud.update === 'function') {
+            this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name, speed);
+        }
     }
 
     draw() {
@@ -215,4 +231,6 @@ class Game {
         this.enemies.forEach(e => e.draw(this.ctx));
     }
 }
-window.onload = () => new Game();
+
+// Start immediately as this is a module
+new Game();
