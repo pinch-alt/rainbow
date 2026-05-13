@@ -145,9 +145,10 @@ class Game {
         this.core = { radius: 25, colorIndex: 0, pulse: 0 };
         this.shield = { angle: 0, arcLength: Math.PI * 0.4, distance: 45, thickness: 6 };
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
-        this.running = false; this.spawnTimer = 0; this.spawnRate = 0.875;
+        this.running = false; this.spawnTimer = 0; this.spawnRate = 0.7;
+        this.currentSpeed = 300;
         if (this.hud && typeof this.hud.update === 'function') {
-            this.hud.update(this.score, this.stage, COLORS[0].name, 200);
+            this.hud.update(this.score, this.stage, COLORS[0].name, this.currentSpeed);
         }
     }
 
@@ -176,12 +177,19 @@ class Game {
     update(dt) {
         this.gameTime += dt;
         this.core.pulse += 3 * dt;
-        const speed = 200 + (this.totalMerges * 60) + (this.gameTime * 5);
+        
+        // Piecewise speed increase
+        let increment = 15;
+        if (this.currentSpeed >= 600) increment = 4;
+        else if (this.currentSpeed >= 500) increment = 8;
+        
+        this.currentSpeed += increment * dt;
+        const speed = this.currentSpeed;
         this.spawnTimer += dt;
         if (this.spawnTimer > this.spawnRate) {
             this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], speed));
             this.spawnTimer = 0;
-            this.spawnRate = Math.max(0.25, 0.875 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
+            this.spawnRate = Math.max(0.2, 0.7 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
         }
         this.shield.angle = Math.atan2(this.mouse.y - this.center.y, this.mouse.x - this.center.x);
         this.shield.distance = this.core.radius + 20;
@@ -197,6 +205,10 @@ class Game {
             } else if (dist < this.core.radius + e.radius) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
                     this.score += 10; this.totalMerges++; this.core.radius *= 1.03;
+                    let mInc = 15;
+                    if (this.currentSpeed >= 600) mInc = 4;
+                    else if (this.currentSpeed >= 500) mInc = 8;
+                    this.currentSpeed += mInc;
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     this.enemies.splice(i, 1);
