@@ -189,10 +189,14 @@ class Enemy {
         const side = Math.floor(Math.random() * 4);
         let x, y;
         
-        if (side === 0) { x = Math.random() * canvas.width; y = -radius; }
-        else if (side === 1) { x = canvas.width + radius; y = Math.random() * canvas.height; }
-        else if (side === 2) { x = Math.random() * canvas.width; y = canvas.height + radius; }
-        else { x = -radius; y = Math.random() * canvas.height; }
+        // Staggered Arrival: Add a random distance offset
+        // This ensures that even if spawned simultaneously, they arrive at different times.
+        const staggerOffset = Math.random() * 150; 
+        
+        if (side === 0) { x = Math.random() * canvas.width; y = -radius - staggerOffset; }
+        else if (side === 1) { x = canvas.width + radius + staggerOffset; y = Math.random() * canvas.height; }
+        else if (side === 2) { x = Math.random() * canvas.width; y = canvas.height + radius + staggerOffset; }
+        else { x = -radius - staggerOffset; y = Math.random() * canvas.height; }
 
         this.x = x;
         this.y = y;
@@ -218,13 +222,11 @@ class Enemy {
 
     reflect() {
         this.isReflected = true;
-        // Add PI to angle to reverse direction properly
         this.angle += Math.PI;
         this.updateVelocity();
     }
 
     update(dt, currentGlobalSpeed) {
-        // Dynamic speed update
         this.speed = currentGlobalSpeed;
         this.updateVelocity();
         
@@ -294,7 +296,8 @@ class Game {
         this.gameTime = 0;
         this.running = false;
         this.spawnTimer = 0;
-        this.spawnRate = 0.45; 
+        // Even higher frequency: initial 0.28s
+        this.spawnRate = 0.28; 
 
         this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name, this.getCurrentSpeed());
     }
@@ -338,9 +341,6 @@ class Game {
     }
 
     getCurrentSpeed() {
-        // Base Speed: 650
-        // Merge Bonus: +60 per merge
-        // Time Bonus: +15 per second
         return 650 + (this.totalMerges * 60) + (this.gameTime * 15);
     }
 
@@ -354,8 +354,8 @@ class Game {
         if (this.spawnTimer > this.spawnRate) {
             this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], currentGlobalSpeed));
             this.spawnTimer = 0;
-            // High frequency spawn rate: starts at 0.45s, floors at 0.15s
-            this.spawnRate = Math.max(0.15, 0.45 - (this.totalMerges * 0.03) - (this.gameTime * 0.012));
+            // Near-instant spawning at high levels (floors at 0.08s)
+            this.spawnRate = Math.max(0.08, 0.28 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
         }
 
         const angle = Math.atan2(this.mouse.y - this.center.y, this.mouse.x - this.center.x);
@@ -407,7 +407,6 @@ class Game {
             }
         }
         
-        // Always update HUD with current speed even if no score
         this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name, currentGlobalSpeed);
     }
 
@@ -417,7 +416,6 @@ class Game {
         const coreColor = COLORS[this.core.colorIndex].value;
         const pulseSize = Math.sin(this.core.pulse) * (this.core.radius * 0.1);
         
-        // Draw Core
         this.ctx.save();
         this.ctx.shadowBlur = 25 + pulseSize;
         this.ctx.shadowColor = coreColor;
@@ -427,7 +425,6 @@ class Game {
         this.ctx.fill();
         this.ctx.restore();
 
-        // Draw Shield Track
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.arc(this.center.x, this.center.y, this.shield.distance, 0, Math.PI * 2);
@@ -436,7 +433,6 @@ class Game {
         this.ctx.stroke();
         this.ctx.restore();
 
-        // Draw Shield
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.arc(this.center.x, this.center.y, this.shield.distance, 
@@ -450,7 +446,6 @@ class Game {
         this.ctx.stroke();
         this.ctx.restore();
 
-        // Draw Entities
         this.enemies.forEach(e => e.draw(this.ctx));
         this.particles.forEach(p => p.draw(this.ctx));
     }
