@@ -25,7 +25,7 @@ class GameHUD extends HTMLElement {
     }
     render() {
         if (!this.shadowRoot) return;
-        this.shadowRoot.innerHTML = \`
+        this.shadowRoot.innerHTML = `
             <style>
                 :host { display: block; font-family: 'Outfit', sans-serif; color: white; }
                 .container {
@@ -43,7 +43,7 @@ class GameHUD extends HTMLElement {
                 <div class="stat"><span class="label">Target</span><span class="value">\${this.currentColor}</span></div>
                 <div class="stat"><span class="label">Score</span><span class="value">\${this.score}</span></div>
                 <div class="stat"><span class="label">Speed</span><span class="value speed-val">\${this.speed}</span></div>
-            </div>\`;
+            </div>`;
     }
 }
 
@@ -56,9 +56,9 @@ class GameOverlay extends HTMLElement {
         const isStart = type === 'start';
         const title = isStart ? 'RAINBOW ORBIT' : 'CORE BREACH';
         let subtext = isStart ? 'Protect the core. Match the colors.' : 'The orbit has been compromised.';
-        if (finalScore !== null) subtext = \`Final Score: <span style="color: white; font-weight: 900; font-size: 2rem;">\${finalScore}</span><br>\${subtext}\`;
+        if (finalScore !== null) subtext = `Final Score: <span style="color: white; font-weight: 900; font-size: 2rem;">\${finalScore}</span><br>\${subtext}`;
         
-        this.shadowRoot.innerHTML = \`
+        this.shadowRoot.innerHTML = `
             <style>
                 .overlay-content { text-align: center; color: rgba(255, 255, 255, 0.8); font-family: 'Outfit', sans-serif; }
                 h1 { font-size: 4rem; font-weight: 900; margin: 0; color: white; letter-spacing: -2px; }
@@ -71,7 +71,7 @@ class GameOverlay extends HTMLElement {
                 }
                 button:hover { transform: scale(1.05); }
             </style>
-            <div class="overlay-content"><h1>\${title}</h1><p>\${subtext}</p><button id="actionBtn">\${isStart ? 'INITIATE' : 'REBOOT'}</button></div>\`;
+            <div class="overlay-content"><h1>\${title}</h1><p>\${subtext}</p><button id="actionBtn">\${isStart ? 'INITIATE' : 'REBOOT'}</button></div>`;
         this.shadowRoot.getElementById('actionBtn').onclick = () => {
             this.style.visibility = 'hidden';
             callback();
