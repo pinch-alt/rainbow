@@ -145,9 +145,9 @@ class Game {
         this.core = { radius: 25, colorIndex: 0, pulse: 0 };
         this.shield = { angle: 0, arcLength: Math.PI * 0.4, distance: 45, thickness: 6 };
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
-        this.running = false; this.spawnTimer = 0; this.spawnRate = 0.385;
+        this.running = false; this.spawnTimer = 0; this.spawnRate = 0.357;
         if (this.hud && typeof this.hud.update === 'function') {
-            this.hud.update(this.score, this.stage, COLORS[0].name, 325);
+            this.hud.update(this.score, this.stage, COLORS[0].name, 195);
         }
     }
 
@@ -176,12 +176,12 @@ class Game {
     update(dt) {
         this.gameTime += dt;
         this.core.pulse += 3 * dt;
-        const speed = 325 + (this.totalMerges * 60) + (this.gameTime * 15);
+        const speed = 195 + (this.totalMerges * 60) + (this.gameTime * 15);
         this.spawnTimer += dt;
         if (this.spawnTimer > this.spawnRate) {
             this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], speed));
             this.spawnTimer = 0;
-            this.spawnRate = Math.max(0.11, 0.385 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
+            this.spawnRate = Math.max(0.10, 0.357 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
         }
         this.shield.angle = Math.atan2(this.mouse.y - this.center.y, this.mouse.x - this.center.x);
         this.shield.distance = this.core.radius + 20;
