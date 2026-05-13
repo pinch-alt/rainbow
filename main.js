@@ -70,7 +70,7 @@ class GameOverlay extends HTMLElement {
         
         this.shadowRoot.innerHTML = \`
             <style>
-                .content { text-align: center; color: rgba(255, 255, 255, 0.8); }
+                .overlay-content { text-align: center; color: rgba(255, 255, 255, 0.8); }
                 h1 { font-size: 4rem; font-weight: 900; margin: 0; color: white; }
                 p { font-size: 1.2rem; margin: 1.5rem 0 2.5rem; }
                 button {
@@ -79,7 +79,7 @@ class GameOverlay extends HTMLElement {
                     font-family: 'Outfit', sans-serif; box-shadow: 0 0 20px rgba(255,255,255,0.3);
                 }
             </style>
-            <div class="content"><h1>\${title}</h1><p>\${subtext}</p><button id="actionBtn">\${isStart ? 'INITIATE' : 'REBOOT'}</button></div>\`;
+            <div class="overlay-content"><h1>\${title}</h1><p>\${subtext}</p><button id="actionBtn">\${isStart ? 'INITIATE' : 'REBOOT'}</button></div>\`;
         this.shadowRoot.getElementById('actionBtn').onclick = () => { this.style.display = 'none'; callback(); };
     }
 }
@@ -132,7 +132,7 @@ class Game {
         this.overlay = document.getElementById('overlay');
         this.resize();
         window.addEventListener('resize', () => this.resize());
-        this.mouse = { x: 0, y: 0 };
+        this.mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
         window.addEventListener('mousemove', (e) => { this.mouse.x = e.clientX; this.mouse.y = e.clientY; });
         this.init();
         this.overlay.show('start', () => this.start());
@@ -215,4 +215,4 @@ class Game {
         this.enemies.forEach(e => e.draw(this.ctx));
     }
 }
-new Game();
+window.onload = () => new Game();
