@@ -264,8 +264,18 @@ class Game {
         this.currentSpeed += inc * dt;
         
         // Conditional spawn rate based on speed
-        if (this.currentSpeed >= 360) {
+        if (this.currentSpeed >= 450) {
             this.baseSpawnRate = 0.5;
+            if (!this.plateauStartTime) this.plateauStartTime = this.gameTime;
+            // Decrease interval by 0.01 every 3 seconds after speed 450, min 0.35
+            const intervalsSincePlateau = Math.floor((this.gameTime - this.plateauStartTime) / 3);
+            this.baseSpawnRate = Math.max(0.35, 0.5 - (intervalsSincePlateau * 0.01));
+        } else if (this.currentSpeed >= 430) {
+            this.baseSpawnRate = 0.6;
+            this.plateauStartTime = null;
+        } else if (this.currentSpeed >= 360) {
+            this.baseSpawnRate = 0.7;
+            this.plateauStartTime = null;
         } else if (this.currentSpeed >= 320) {
             this.baseSpawnRate = 0.6;
         } else if (this.currentSpeed >= 290) {
@@ -273,20 +283,16 @@ class Game {
         } else {
             this.baseSpawnRate = 0.875;
         }
-        
-        // Decrease spawn interval by 0.1 every 30 seconds after speed reaches 450 (increasing challenge)
-        if (this.currentSpeed >= 450) {
-            if (!this.plateauStartTime) this.plateauStartTime = this.gameTime;
-            const intervalsSincePlateau = Math.floor((this.gameTime - this.plateauStartTime) / 30);
-            this.baseSpawnRate -= intervalsSincePlateau * 0.1;
-        }
 
         this.spawnTimer += dt;
-        // Use baseSpawnRate directly for a more predictable experience as requested
         const currentSpawnRate = Math.max(0.2, this.baseSpawnRate);
         
         if (this.spawnTimer > currentSpawnRate) {
-            const requiredDist = this.lastEnemyDistance + (0.25 * this.currentSpeed);
+            // Stronger spacing logic: Ensure enemies don't reach center simultaneously
+            // Spacing based on arrival time = distance / speed. 
+            // We want at least a 0.25s gap in arrival time.
+            // Dist_new / Speed = (Dist_prev / Speed) + GAP -> Dist_new = Dist_prev + (GAP * Speed)
+            const requiredDist = this.lastEnemyDistance + (0.3 * this.currentSpeed); 
             const newEnemy = new Enemy(this.canvas, COLORS[this.core.colorIndex], this.currentSpeed, requiredDist);
             this.enemies.push(newEnemy);
             this.lastEnemyDistance = newEnemy.distanceToCenter;
