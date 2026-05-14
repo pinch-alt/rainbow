@@ -256,15 +256,17 @@ class Game {
         this.lastEnemyDistance -= this.currentSpeed * dt;
         if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
 
-        // Speed plateau at 400
+        // Speed plateau at 450
         let inc = 0;
-        if (this.currentSpeed < 400) {
+        if (this.currentSpeed < 450) {
             inc = this.currentSpeed >= 700 ? 0.25 : (this.currentSpeed >= 600 ? 0.5 : (this.currentSpeed >= 500 ? 1 : 2));
         }
         this.currentSpeed += inc * dt;
         
         // Conditional spawn rate based on speed
-        if (this.currentSpeed >= 320) {
+        if (this.currentSpeed >= 360) {
+            this.baseSpawnRate = 0.5;
+        } else if (this.currentSpeed >= 320) {
             this.baseSpawnRate = 0.6;
         } else if (this.currentSpeed >= 290) {
             this.baseSpawnRate = 1.3;
@@ -272,8 +274,8 @@ class Game {
             this.baseSpawnRate = 0.875;
         }
         
-        // Decrease spawn interval by 0.1 every 30 seconds after speed reaches 400 (increasing challenge)
-        if (this.currentSpeed >= 400) {
+        // Decrease spawn interval by 0.1 every 30 seconds after speed reaches 450 (increasing challenge)
+        if (this.currentSpeed >= 450) {
             if (!this.plateauStartTime) this.plateauStartTime = this.gameTime;
             const intervalsSincePlateau = Math.floor((this.gameTime - this.plateauStartTime) / 30);
             this.baseSpawnRate -= intervalsSincePlateau * 0.1;
@@ -284,7 +286,7 @@ class Game {
         const currentSpawnRate = Math.max(0.2, this.baseSpawnRate);
         
         if (this.spawnTimer > currentSpawnRate) {
-            const requiredDist = this.lastEnemyDistance + (0.2 * this.currentSpeed);
+            const requiredDist = this.lastEnemyDistance + (0.25 * this.currentSpeed);
             const newEnemy = new Enemy(this.canvas, COLORS[this.core.colorIndex], this.currentSpeed, requiredDist);
             this.enemies.push(newEnemy);
             this.lastEnemyDistance = newEnemy.distanceToCenter;
