@@ -1,5 +1,5 @@
 /**
- * Rainbow Orbit: Optimized & Enhanced Version.
+ * Rainbow Orbit: Ultra-Optimized & Fixed Version.
  */
 
 const COLORS = [
@@ -74,9 +74,12 @@ class GameOverlay extends HTMLElement {
                 button:active { transform: scale(0.95); }
             </style>
             <div class="overlay-content"><h1>${title}</h1><p>${subtext}</p><button id="actionBtn">${isStart ? 'INITIATE' : 'REBOOT'}</button></div>`;
-        this.shadowRoot.getElementById('actionBtn').onclick = (e) => {
+        
+        const btn = this.shadowRoot.getElementById('actionBtn');
+        btn.onclick = (e) => {
             e.stopPropagation();
             this.style.visibility = 'hidden';
+            this.style.display = 'none';
             if (isStart && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
             callback();
         };
@@ -90,32 +93,27 @@ if (!customElements.get('game-overlay')) customElements.define('game-overlay', G
 
 class Enemy {
     constructor(canvas, targetColor, speed, requiredDistance = 0) {
-        const radius = 10;
+        this.radius = 10;
         this.colorInfo = Math.random() < 0.4 ? targetColor : COLORS[Math.floor(Math.random() * COLORS.length)];
         this.isReflected = false;
         
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        // Use circular spawn to ensure uniform distance calculation
         const canvasDiagonal = Math.hypot(centerX, centerY);
-        const baseDistance = canvasDiagonal + radius + Math.random() * 50;
+        const baseDistance = canvasDiagonal + this.radius + Math.random() * 50;
         
         this.distanceToCenter = Math.max(baseDistance, requiredDistance);
         const angleFromCenter = Math.random() * Math.PI * 2;
         
         this.x = centerX + Math.cos(angleFromCenter) * this.distanceToCenter;
         this.y = centerY + Math.sin(angleFromCenter) * this.distanceToCenter;
-
-        this.radius = radius;
         this.angle = Math.atan2(centerY - this.y, centerX - this.x);
-        this.vx = Math.cos(this.angle) * speed;
-        this.vy = Math.sin(this.angle) * speed;
     }
     update(dt, speed) {
-        this.vx = Math.cos(this.angle) * speed;
-        this.vy = Math.sin(this.angle) * speed;
-        this.x += this.vx * dt;
-        this.y += this.vy * dt;
+        const vx = Math.cos(this.angle) * speed;
+        const vy = Math.sin(this.angle) * speed;
+        this.x += vx * dt;
+        this.y += vy * dt;
     }
     draw(ctx) {
         ctx.save();
@@ -137,6 +135,7 @@ class Game {
         this.resize();
         window.addEventListener('resize', () => this.resize());
         
+        this.targetShieldAngle = 0;
         const updatePointer = (e) => {
             this.targetShieldAngle = Math.atan2(e.clientY - this.center.y, e.clientX - this.center.x);
         };
@@ -150,7 +149,6 @@ class Game {
     init() {
         this.core = { radius: 25, colorIndex: 0, pulse: 0 };
         this.shield = { angle: 0, arcLength: Math.PI * 0.4, distance: 45, thickness: 8 };
-        this.targetShieldAngle = 0;
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
         this.running = false; this.spawnTimer = 0; this.spawnRate = 0.7;
         this.currentSpeed = 300;
@@ -173,7 +171,7 @@ class Game {
 
     gameLoop(currentTime) {
         if (!this.running) return;
-        let dt = Math.min((currentTime - this.lastTime) / 2000, 0.05);
+        let dt = Math.min((currentTime - this.lastTime) / 1000, 0.1);
         this.lastTime = currentTime;
         this.update(dt);
         this.draw();
@@ -184,71 +182,25 @@ class Game {
         this.gameTime += dt;
         this.core.pulse += 3 * dt;
         
-        // Piecewise speed increase
-        let increment = 15;
-        if (this.currentSpeed >= 700) increment = 2; 
-        else if (this.currentSpeed >= 600) increment = 4;
-        else if (this.currentSpeed >= 500) increment = 8;
-        
-        this.currentSpeed += increment * dt;
-        const speed = this.currentSpeed;
-
-        // Track distance of last enemy
-        this.lastEnemyDistance -= speed * dt;
+        this.lastEnemyDistance -= this.currentSpeed * dt;
         if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
 
+        let inc = this.currentSpeed >= 700 ? 2 : (this.currentSpeed >= 600 ? 4 : (this.currentSpeed >= 500 ? 8 : 15));
+        this.currentSpeed += inc * dt;
+        
         this.spawnTimer += dt;
         if (this.spawnTimer > this.spawnRate) {
-            // Force a 0.2s minimum gap by adjusting spawn distance
-            const requiredDist = this.lastEnemyDistance + (0.2 * speed);
-            const newEnemy = new Enemy(this.canvas, COLORS[this.core.colorIndex], speed, requiredDist);
+            const requiredDist = this.lastEnemyDistance + (0.2 * this.currentSpeed);
+            const newEnemy = new Enemy(this.canvas, COLORS[this.core.colorIndex], this.currentSpeed, requiredDist);
             this.enemies.push(newEnemy);
             this.lastEnemyDistance = newEnemy.distanceToCenter;
-
             this.spawnTimer = 0;
             this.spawnRate = Math.max(0.2, 0.7 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
         }
 
-        // Direct follow with minimal smoothing for "stickiness"
         let angleDiff = this.targetShieldAngle - this.shield.angle;
         while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
         while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-        
-        // High multiplier (50) for ultra-responsive feel
-        this.shield.angle += angleDiff * 50 * dt;
-
-        this.shield.distance = this.core.radius + 20;
-
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const e = this.enemies[i]; e.update(dt, this.currentSpeed);
-            const dist = Math.hypot(e.x - this.center.x, e.y - this.center.y);
-            let diff = Math.atan2(e.y - this.center.y, e.x - this.center.x) - this.shield.angle;
-            while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
-
-            if (!e.isReflected && Math.abs(diff) < this.shield.arcLength / 2 && dist < this.shield.distance + 15 && dist > this.shield.distance - 15) {
-                e.isReflected = true; e.angle += Math.PI;
-                if (navigator.vibrate) navigator.vibrate(20);
-            } else if (dist < this.core.radius + e.radius) {
-                if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
-                    this.score += 10; this.totalMerges++; this.core.radius *= 1.03;
-                    this.currentSpeed += 10;
-                    this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
-                    if (this.core.colorIndex === 0) this.stage++;
-                    this.enemies.splice(i, 1);
-                    if (navigator.vibrate) navigator.vibrate(40);
-                } else {
-                    this.running = false;
-                    if (this.overlay) this.overlay.show('gameover', () => this.start(), this.score);
-                    return;
-                }
-            } else if (e.isReflected && (e.x < -200 || e.x > this.canvas.width + 200 || e.y < -200 || e.y > this.canvas.height + 200)) {
-                this.enemies.splice(i, 1);
-            }
-        }
-        if (this.hud) this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name, this.currentSpeed);
-    }
-        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
         this.shield.angle += angleDiff * 50 * dt;
         this.shield.distance = this.core.radius + 20;
 
@@ -261,9 +213,9 @@ class Game {
             if (!e.isReflected && Math.abs(diff) < this.shield.arcLength / 2 && dist < this.shield.distance + 15 && dist > this.shield.distance - 15) {
                 e.isReflected = true; e.angle += Math.PI;
                 if (navigator.vibrate) navigator.vibrate(20);
-            } else if (dist < this.core.radius + e.radius) {
+            } else if (dist < this.core.radius + 10) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
-                    this.score += 10; this.totalMerges++; this.core.radius *= 1.03;
+                    this.score += 10; this.totalMerges++; this.core.radius *= 1.02;
                     this.currentSpeed += 10;
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
@@ -286,14 +238,10 @@ class Game {
         const color = COLORS[this.core.colorIndex].value;
         const pulse = Math.sin(this.core.pulse) * (this.core.radius * 0.1);
         
-        // Guide Line
+        // Guide
         this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.arc(this.center.x, this.center.y, this.shield.distance, 0, Math.PI * 2);
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        this.ctx.setLineDash([5, 10]);
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
+        this.ctx.beginPath(); this.ctx.arc(this.center.x, this.center.y, this.shield.distance, 0, Math.PI * 2);
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'; this.ctx.setLineDash([5, 10]); this.ctx.stroke();
         this.ctx.restore();
 
         // Core
@@ -310,7 +258,7 @@ class Game {
         this.ctx.shadowBlur = 20; this.ctx.shadowColor = 'white'; this.ctx.stroke();
         this.ctx.restore();
         
-        this.enemies.forEach(e => e.draw(this.ctx));
+        for (const e of this.enemies) e.draw(this.ctx);
     }
 }
 
