@@ -1,5 +1,5 @@
 /**
- * Rainbow Orbit: Ultra-Optimized & Fixed Version.
+ * Rainbow Orbit: Ultra-Optimized & Balanced Version.
  */
 
 const COLORS = [
@@ -150,8 +150,9 @@ class Game {
         this.core = { radius: 25, colorIndex: 0, pulse: 0 };
         this.shield = { angle: 0, arcLength: Math.PI * 0.4, distance: 45, thickness: 8 };
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
-        this.running = false; this.spawnTimer = 0; this.spawnRate = 0.7;
-        this.currentSpeed = 200; // Reduced base speed
+        this.running = false; this.spawnTimer = 0; 
+        this.baseSpawnRate = 1.09375; // Reduced frequency to 80% (original 0.875 * 1.25)
+        this.currentSpeed = 200;
         this.lastEnemyDistance = 0;
         if (this.hud) this.hud.update(this.score, this.stage, COLORS[0].name, this.currentSpeed);
     }
@@ -185,18 +186,19 @@ class Game {
         this.lastEnemyDistance -= this.currentSpeed * dt;
         if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
 
-        // Reduced piecewise increments
-        let inc = this.currentSpeed >= 700 ? 1 : (this.currentSpeed >= 600 ? 2 : (this.currentSpeed >= 500 ? 4 : 8));
+        // Halved piecewise increments (original: 4, 2, 1, 0.5)
+        let inc = this.currentSpeed >= 700 ? 0.25 : (this.currentSpeed >= 600 ? 0.5 : (this.currentSpeed >= 500 ? 1 : 2));
         this.currentSpeed += inc * dt;
         
         this.spawnTimer += dt;
-        if (this.spawnTimer > this.spawnRate) {
+        const currentSpawnRate = Math.max(0.25, this.baseSpawnRate - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
+        
+        if (this.spawnTimer > currentSpawnRate) {
             const requiredDist = this.lastEnemyDistance + (0.2 * this.currentSpeed);
             const newEnemy = new Enemy(this.canvas, COLORS[this.core.colorIndex], this.currentSpeed, requiredDist);
             this.enemies.push(newEnemy);
             this.lastEnemyDistance = newEnemy.distanceToCenter;
             this.spawnTimer = 0;
-            this.spawnRate = Math.max(0.2, 0.7 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
         }
 
         let angleDiff = this.targetShieldAngle - this.shield.angle;
@@ -217,7 +219,7 @@ class Game {
             } else if (dist < this.core.radius + 10) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
                     this.score += 10; this.totalMerges++; this.core.radius *= 1.02;
-                    this.currentSpeed += 5; // Reduced merge bonus
+                    this.currentSpeed += 2.5; // Halved merge bonus
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     this.enemies.splice(i, 1);

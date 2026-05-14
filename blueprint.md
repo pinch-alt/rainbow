@@ -32,6 +32,7 @@
 *   **Fullscreen Mode:** Implemented request for fullscreen mode upon game initiation.
 *   **Responsive UI:** Optimized HUD and Overlay for various screen sizes.
 
-## 4. Current State: Performance & UX Refinement
-*   Codebase has been refactored for maximum efficiency.
-*   **Current Task:** Monitoring performance and ensuring seamless touch-to-shield synchronization.
+### Step 6: Difficulty Rebalancing (Requested)
+*   **Spawn Frequency Reduction:** Reduced frequency to 80% of the previous state (interval increased by 1.25x). `baseSpawnRate` updated from 0.875 to **1.09375**.
+*   **Speed Progression Halved:** The dynamic speed increase per second has been reduced by 50% across all speed tiers (e.g., initial increase reduced from +4/sec to **+2/sec**).
+*   **Merge Bonus Adjustment:** Speed bonus per successful merge maintained at a lower level for consistency.
