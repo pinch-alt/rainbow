@@ -265,18 +265,18 @@ class Game {
         
         // Conditional spawn rate based on speed
         if (this.currentSpeed >= 320) {
-            this.baseSpawnRate = 1.45;
+            this.baseSpawnRate = 1.35;
         } else if (this.currentSpeed >= 290) {
             this.baseSpawnRate = 1.3;
         } else {
             this.baseSpawnRate = 0.875;
         }
         
-        // Decrease spawn interval by 0.05 every minute after speed reaches 340 (increasing challenge)
+        // Decrease spawn interval by 0.05 every 30 seconds after speed reaches 340 (increasing challenge)
         if (this.currentSpeed >= 340) {
             if (!this.plateauStartTime) this.plateauStartTime = this.gameTime;
-            const minutesSincePlateau = Math.floor((this.gameTime - this.plateauStartTime) / 60);
-            this.baseSpawnRate -= minutesSincePlateau * 0.05;
+            const intervalsSincePlateau = Math.floor((this.gameTime - this.plateauStartTime) / 30);
+            this.baseSpawnRate -= intervalsSincePlateau * 0.05;
         }
 
         this.spawnTimer += dt;
