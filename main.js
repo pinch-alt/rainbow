@@ -147,7 +147,7 @@ class Game {
     }
 
     init() {
-        this.core = { radius: 25, colorIndex: 0, pulse: 0 };
+        this.core = { radius: 18, colorIndex: 0, pulse: 0 };
         this.shield = { angle: 0, arcLength: Math.PI * 0.4, distance: 45, thickness: 8 };
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
         this.running = false; this.spawnTimer = 0; 
@@ -213,13 +213,18 @@ class Game {
             let diff = Math.atan2(e.y - this.center.y, e.x - this.center.x) - this.shield.angle;
             while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
 
-            if (!e.isReflected && Math.abs(diff) < this.shield.arcLength / 2 && dist < this.shield.distance + 15 && dist > this.shield.distance - 15) {
+            // Improved precision: include enemy radius in angular hit detection
+            const angularWidth = Math.atan2(e.radius, dist);
+            const isWithinArc = Math.abs(diff) < (this.shield.arcLength / 2) + angularWidth;
+            const isWithinDistance = dist < this.shield.distance + 15 && dist > this.shield.distance - 15;
+
+            if (!e.isReflected && isWithinArc && isWithinDistance) {
                 e.isReflected = true; e.angle += Math.PI;
                 if (navigator.vibrate) navigator.vibrate(20);
             } else if (dist < this.core.radius + 10) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
-                    this.score += 10; this.totalMerges++; this.core.radius *= 1.02;
-                    this.currentSpeed += 2.5; // Halved merge bonus
+                    this.score += 10; this.totalMerges++; this.core.radius *= 1.05; // Growth increased to 5%
+                    this.currentSpeed += 2.5; 
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     this.enemies.splice(i, 1);

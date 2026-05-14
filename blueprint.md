@@ -36,3 +36,8 @@
 *   **Spawn Frequency Reduction:** Reduced frequency to 80% of the previous state (interval increased by 1.25x). `baseSpawnRate` updated from 0.875 to **1.09375**.
 *   **Speed Progression Halved:** The dynamic speed increase per second has been reduced by 50% across all speed tiers (e.g., initial increase reduced from +4/sec to **+2/sec**).
 *   **Merge Bonus Adjustment:** Speed bonus per successful merge maintained at a lower level for consistency.
+
+### Step 7: Core & Shield Refinement (Requested)
+*   **Initial Core Size Reduction:** Reduced the starting radius of the central core from 25 to **18** for a more challenging start.
+*   **Dynamic Core Growth:** Each successful merge now increases the core radius by **5%** (`*= 1.05`), providing a more visible sense of progression.
+*   **Precision Shield Collision:** Enhanced the collision detection algorithm. The angular check now incorporates the enemy's radius relative to the shield distance (`arcLength / 2 + atan(radius / distance)`), ensuring hits at the very tips of the shield are accurately reflected.
