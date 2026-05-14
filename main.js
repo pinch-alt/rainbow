@@ -256,15 +256,15 @@ class Game {
         this.lastEnemyDistance -= this.currentSpeed * dt;
         if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
 
-        // Speed plateau at 450
+        // Speed plateau at 500
         let inc = 0;
-        if (this.currentSpeed < 450) {
+        if (this.currentSpeed < 500) {
             inc = this.currentSpeed >= 700 ? 0.25 : (this.currentSpeed >= 600 ? 0.5 : (this.currentSpeed >= 500 ? 1 : 2));
         }
         this.currentSpeed += inc * dt;
         
         // Conditional spawn rate based on speed
-        if (this.currentSpeed >= 450) {
+        if (this.currentSpeed >= 500) {
             if (!this.plateauStartTime) this.plateauStartTime = this.gameTime;
             const elapsedSeconds = this.gameTime - this.plateauStartTime;
             const reductions = Math.floor(elapsedSeconds / 3);

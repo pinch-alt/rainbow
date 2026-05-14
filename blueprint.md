@@ -49,10 +49,10 @@
 *   **Speed-Triggered Spawn Intervals:**
     *   At speed **360**, the spawn interval is set to **0.7s**.
     *   At speed **430**, the spawn interval is set to **0.6s**.
-    *   At speed **450**, the spawn interval is set to **0.5s**.
-*   **Aggressive Late-Game Challenge:** Starting from speed **450**, every **3 seconds** elapsed, the spawn interval decreases by **0.01s** until it reaches a minimum of **0.35s**.
+    *   At speed **500**, the spawn interval is set to **0.5s**.
+*   **Aggressive Late-Game Challenge:** Starting from speed **500**, every **3 seconds** elapsed, the spawn interval decreases by **0.01s** until it reaches a minimum of **0.35s**.
 *   **Simultaneous Arrival Prevention:** A robust spacing logic ensures that balls never reach the central core at the same time by maintaining a minimum arrival time gap.
-*   **Speed & Core Plateau:** Speed increases halt at **450+** and core growth halts at score **170+** to maintain gameplay balance.
+*   **Speed & Core Plateau:** Speed increases halt at **500+** and core growth halts at score **170+** to maintain gameplay balance.
 
 ### Step 9: Nickname & Leaderboard (Requested)
 *   **Nickname Input:** Added a text input field to the start screen with a 10-character limit.
