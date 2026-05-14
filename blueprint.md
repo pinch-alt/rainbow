@@ -46,9 +46,10 @@
 *   **Precision Shield Collision:** Enhanced the collision detection algorithm. The angular check now incorporates the enemy's radius relative to the shield distance (`arcLength / 2 + atan(radius / distance)`), ensuring hits at the very tips of the shield are accurately reflected.
 
 ### Step 8: Conditional Difficulty Scaling (Requested)
-*   **Speed-Triggered Spawn Reduction:** At speed **290+**, spawn frequency is reduced to 80% of the original (interval increased to **1.09375**). Below 290, the rate remains at **0.875**.
-*   **Speed Plateau:** At speed **350+**, all speed increases (time-based progression and merge bonuses) are completely halted to maintain a constant challenge level.
+*   **Speed-Triggered Spawn Reduction:** At speed **320+**, the base spawn interval is increased to **1.45**. Between 290 and 320, it is **1.3**. Below 290, it remains at **0.875**.
+*   **Speed Plateau:** At speed **340+**, all speed increases (time-based progression and merge bonuses) are completely halted to maintain a constant challenge level.
 *   **Core Size Plateau:** At score **170+**, the central core's size growth is halted to prevent it from becoming too large and making the game too difficult/easy.
+*   **Time-Based Challenge:** Starting from the moment speed hits **340**, a timer begins. Every **1 minute** elapsed after this point, the spawn interval decreases by **0.05**, creating a progressive challenge even at the speed plateau.
 
 ### Step 9: Nickname & Leaderboard (Requested)
 *   **Nickname Input:** Added a text input field to the start screen with a 10-character limit.
