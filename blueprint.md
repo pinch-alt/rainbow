@@ -20,7 +20,9 @@
 ## 3. Implementation Plan (Phase 2: Modernization)
 
 ### Step 4: Physics & Collision Refinement (Optimized)
-*   **Dynamic Speed Scaling:** Implemented `getCurrentSpeed()` logic with piecewise progression (+15, +8, +4, +2).
+*   **Dynamic Speed Scaling:** Implemented `getCurrentSpeed()` logic with a more accessible difficulty curve.
+*   **Reduced Piecewise Progression:** Base speed reduced to **200**. Speed increases by +8/sec initially, slowing to +4/sec (at 500+), +2/sec (at 600+), and **+1/sec (at 700+)**.
+*   **Merge Bonus:** Speed increase per merge reduced to **+5** for a smoother experience.
 *   **Performance Optimization:** Streamlined render loop and removed redundant variables/logic to ensure 60FPS on all devices.
 *   **Real-Time Updates:** Enemies now update their velocity every frame to reflect global speed changes immediately.
 

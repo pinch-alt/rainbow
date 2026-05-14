@@ -151,7 +151,7 @@ class Game {
         this.shield = { angle: 0, arcLength: Math.PI * 0.4, distance: 45, thickness: 8 };
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
         this.running = false; this.spawnTimer = 0; this.spawnRate = 0.7;
-        this.currentSpeed = 300;
+        this.currentSpeed = 200; // Reduced base speed
         this.lastEnemyDistance = 0;
         if (this.hud) this.hud.update(this.score, this.stage, COLORS[0].name, this.currentSpeed);
     }
@@ -185,7 +185,8 @@ class Game {
         this.lastEnemyDistance -= this.currentSpeed * dt;
         if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
 
-        let inc = this.currentSpeed >= 700 ? 2 : (this.currentSpeed >= 600 ? 4 : (this.currentSpeed >= 500 ? 8 : 15));
+        // Reduced piecewise increments
+        let inc = this.currentSpeed >= 700 ? 1 : (this.currentSpeed >= 600 ? 2 : (this.currentSpeed >= 500 ? 4 : 8));
         this.currentSpeed += inc * dt;
         
         this.spawnTimer += dt;
@@ -216,7 +217,7 @@ class Game {
             } else if (dist < this.core.radius + 10) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
                     this.score += 10; this.totalMerges++; this.core.radius *= 1.02;
-                    this.currentSpeed += 10;
+                    this.currentSpeed += 5; // Reduced merge bonus
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     this.enemies.splice(i, 1);
