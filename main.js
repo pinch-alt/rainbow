@@ -256,32 +256,32 @@ class Game {
         this.lastEnemyDistance -= this.currentSpeed * dt;
         if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
 
-        // Speed plateau at 340
+        // Speed plateau at 400
         let inc = 0;
-        if (this.currentSpeed < 340) {
+        if (this.currentSpeed < 400) {
             inc = this.currentSpeed >= 700 ? 0.25 : (this.currentSpeed >= 600 ? 0.5 : (this.currentSpeed >= 500 ? 1 : 2));
         }
         this.currentSpeed += inc * dt;
         
         // Conditional spawn rate based on speed
         if (this.currentSpeed >= 320) {
-            this.baseSpawnRate = 1.35;
+            this.baseSpawnRate = 1.0;
         } else if (this.currentSpeed >= 290) {
             this.baseSpawnRate = 1.3;
         } else {
             this.baseSpawnRate = 0.875;
         }
         
-        // Decrease spawn interval by 0.05 every 30 seconds after speed reaches 340 (increasing challenge)
-        if (this.currentSpeed >= 340) {
+        // Decrease spawn interval by 0.1 every 30 seconds after speed reaches 400 (increasing challenge)
+        if (this.currentSpeed >= 400) {
             if (!this.plateauStartTime) this.plateauStartTime = this.gameTime;
             const intervalsSincePlateau = Math.floor((this.gameTime - this.plateauStartTime) / 30);
-            this.baseSpawnRate -= intervalsSincePlateau * 0.05;
+            this.baseSpawnRate -= intervalsSincePlateau * 0.1;
         }
 
         this.spawnTimer += dt;
         // Use baseSpawnRate directly for a more predictable experience as requested
-        const currentSpawnRate = Math.max(0.25, this.baseSpawnRate);
+        const currentSpawnRate = Math.max(0.2, this.baseSpawnRate);
         
         if (this.spawnTimer > currentSpawnRate) {
             const requiredDist = this.lastEnemyDistance + (0.2 * this.currentSpeed);
@@ -315,7 +315,7 @@ class Game {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
                     this.score += 10; this.totalMerges++; 
                     if (this.score < 170) this.core.radius *= 1.05; // Growth limit at score 170
-                    if (this.currentSpeed < 340) this.currentSpeed += 2.5; // Speed plateau
+                    if (this.currentSpeed < 400) this.currentSpeed += 2.5; // Speed plateau
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     this.enemies.splice(i, 1);
