@@ -186,15 +186,15 @@ class Game {
         this.lastEnemyDistance -= this.currentSpeed * dt;
         if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
 
-        // Speed plateau at 350
+        // Speed plateau at 340
         let inc = 0;
-        if (this.currentSpeed < 350) {
+        if (this.currentSpeed < 340) {
             inc = this.currentSpeed >= 700 ? 0.25 : (this.currentSpeed >= 600 ? 0.5 : (this.currentSpeed >= 500 ? 1 : 2));
         }
         this.currentSpeed += inc * dt;
         
         // Conditional spawn rate based on speed
-        this.baseSpawnRate = this.currentSpeed >= 290 ? 1.09375 : 0.875;
+        this.baseSpawnRate = this.currentSpeed >= 290 ? 1.2 : 0.875;
         
         this.spawnTimer += dt;
         const currentSpawnRate = Math.max(0.25, this.baseSpawnRate - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
@@ -230,7 +230,7 @@ class Game {
             } else if (dist < this.core.radius + 10) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
                     this.score += 10; this.totalMerges++; this.core.radius *= 1.05; // Growth increased to 5%
-                    if (this.currentSpeed < 350) this.currentSpeed += 2.5; // Speed plateau
+                    if (this.currentSpeed < 340) this.currentSpeed += 2.5; // Speed plateau
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
                     this.enemies.splice(i, 1);
