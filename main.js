@@ -264,8 +264,15 @@ class Game {
         this.currentSpeed += inc * dt;
         
         // Conditional spawn rate based on speed
-        this.baseSpawnRate = this.currentSpeed >= 290 ? 1.2 : 0.875;
+        this.baseSpawnRate = this.currentSpeed >= 290 ? 1.3 : 0.875;
         
+        // Increase spawn interval by 0.05 every minute after speed reaches 340
+        if (this.currentSpeed >= 340) {
+            if (!this.plateauStartTime) this.plateauStartTime = this.gameTime;
+            const minutesSincePlateau = Math.floor((this.gameTime - this.plateauStartTime) / 60);
+            this.baseSpawnRate += minutesSincePlateau * 0.05;
+        }
+
         this.spawnTimer += dt;
         const currentSpawnRate = Math.max(0.25, this.baseSpawnRate - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
         
