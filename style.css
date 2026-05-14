@@ -48,6 +48,7 @@
     max-width: 100%;
     max-height: 100%;
     z-index: 1;
+    touch-action: none;
   }
 
   .noise {
@@ -66,11 +67,19 @@
 /* Custom Element Styles (Shadow DOM fallback/global) */
 game-hud {
   position: absolute;
-  top: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 1rem;
+  left: 0;
+  right: 0;
   z-index: 10;
   pointer-events: none;
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 600px) {
+  game-hud {
+    top: 2rem;
+  }
 }
 
 game-overlay {
