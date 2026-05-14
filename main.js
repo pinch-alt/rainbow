@@ -229,7 +229,8 @@ class Game {
                 if (navigator.vibrate) navigator.vibrate(20);
             } else if (dist < this.core.radius + 10) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
-                    this.score += 10; this.totalMerges++; this.core.radius *= 1.05; // Growth increased to 5%
+                    this.score += 10; this.totalMerges++; 
+                    if (this.score < 200) this.core.radius *= 1.05; // Growth limit at score 200
                     if (this.currentSpeed < 340) this.currentSpeed += 2.5; // Speed plateau
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
