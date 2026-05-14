@@ -265,7 +265,7 @@ class Game {
         
         // Conditional spawn rate based on speed
         if (this.currentSpeed >= 320) {
-            this.baseSpawnRate = 1.0;
+            this.baseSpawnRate = 0.6;
         } else if (this.currentSpeed >= 290) {
             this.baseSpawnRate = 1.3;
         } else {
