@@ -9,6 +9,7 @@
 *   **Color Palette:** Utilizing `oklch` for ultra-vibrant, perceptually uniform colors.
 *   **Effects:** Glow, Depth (shadows), and Texture (noise) for a premium feel.
 *   **Orbit Guideline:** A thin, dashed line marking the shield's rotation path for better precision.
+*   **Dynamic Overlays:** High-contrast, blurred overlays for start and game-over states.
 
 ### Features
 *   **Evolving Core:** Central circle changes color in the rainbow sequence.
@@ -16,6 +17,8 @@
 *   **Real-Time Progressive Speed Physics:** Enemies speed up dynamically based on merges and time elapsed.
 *   **Dynamic Difficulty:** Both spawn rate and enemy speed scale with `totalMerges` and `gameTime`.
 *   **Unified Render Engine:** Sync via `requestAnimationFrame` for maximum performance.
+*   **Nickname System:** Players enter a custom nickname before starting.
+*   **Local Leaderboard:** Persistent top 10 rankings stored via `localStorage`.
 
 ## 3. Implementation Plan (Phase 2: Modernization)
 
@@ -45,3 +48,9 @@
 ### Step 8: Conditional Difficulty Scaling (Requested)
 *   **Speed-Triggered Spawn Reduction:** At speed **290+**, spawn frequency is reduced to 80% of the original (interval increased to **1.09375**). Below 290, the rate remains at **0.875**.
 *   **Speed Plateau:** At speed **350+**, all speed increases (time-based progression and merge bonuses) are completely halted to maintain a constant challenge level.
+*   **Core Size Plateau:** At score **170+**, the central core's size growth is halted to prevent it from becoming too large and making the game too difficult/easy.
+
+### Step 9: Nickname & Leaderboard (Requested)
+*   **Nickname Input:** Added a text input field to the start screen with a 10-character limit.
+*   **Score Persistence:** Implemented `updateLeaderboard()` using `localStorage` to save the player's name and score.
+*   **Top 10 Display:** The game-over screen now displays a sorted list of the top 10 orbital pilots.

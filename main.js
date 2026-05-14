@@ -49,39 +49,96 @@ class GameOverlay extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
     }
-    show(type, callback, finalScore = null) {
+    show(type, callback, finalScore = null, leaderboard = []) {
         const isStart = type === 'start';
         const title = isStart ? 'RAINBOW ORBIT' : 'CORE BREACH';
-        let subtext = isStart ? 'Protect the core. Match the colors.' : 'The orbit has been compromised.';
-        if (finalScore !== null) {
-            subtext = `Final Score: <span style="color: white; font-weight: 900; font-size: 2rem;">${finalScore}</span><br>${subtext}`;
+        let content = '';
+
+        if (isStart) {
+            content = `
+                <p>Protect the core. Match the colors.</p>
+                <input type="text" id="nicknameInput" placeholder="ENTER NICKNAME" maxlength="10" />
+                <button id="actionBtn">INITIATE</button>
+            `;
+        } else {
+            let leaderboardHTML = '';
+            if (leaderboard.length > 0) {
+                leaderboardHTML = `
+                    <div class="leaderboard">
+                        <h2>TOP ORBITALS</h2>
+                        ${leaderboard.map((entry, i) => `
+                            <div class="entry">
+                                <span>${i + 1}. ${entry.name}</span>
+                                <span>${entry.score}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            content = `
+                <div class="final-score">Final Score: <span>${finalScore}</span></div>
+                ${leaderboardHTML}
+                <button id="actionBtn">REBOOT</button>
+            `;
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         }
         
         this.shadowRoot.innerHTML = `
             <style>
-                .overlay-content { text-align: center; color: rgba(255, 255, 255, 0.8); font-family: 'Outfit', sans-serif; padding: 2rem; }
+                :host {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(0, 0, 0, 0.85);
+                    backdrop-filter: blur(10px);
+                    position: fixed;
+                    top: 0; left: 0; width: 100%; height: 100%;
+                    z-index: 1000;
+                }
+                .overlay-content { text-align: center; color: rgba(255, 255, 255, 0.8); font-family: 'Outfit', sans-serif; padding: 2rem; max-width: 400px; width: 90%; }
                 h1 { font-size: 3rem; font-weight: 900; margin: 0; color: white; letter-spacing: -2px; line-height: 1; }
-                p { font-size: 1rem; margin: 1.5rem 0 2.5rem; }
+                h2 { font-size: 1.2rem; color: #00ffcc; margin: 1.5rem 0 0.5rem; letter-spacing: 0.1rem; }
+                p { font-size: 1rem; margin: 1rem 0 2rem; }
+                .final-score { font-size: 1.2rem; margin-bottom: 1rem; }
+                .final-score span { color: white; font-weight: 900; font-size: 2.5rem; display: block; }
+                input {
+                    background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2);
+                    color: white; padding: 1rem; font-size: 1.2rem; border-radius: 0.5rem;
+                    width: 100%; box-sizing: border-box; margin-bottom: 1.5rem; text-align: center;
+                    font-family: 'Outfit', sans-serif; font-weight: 900; outline: none;
+                }
+                input:focus { border-color: #00ffcc; }
+                .leaderboard { margin-bottom: 2rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 1rem; }
+                .entry { display: flex; justify-content: space-between; padding: 0.3rem 0; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); }
+                .entry:last-child { border-bottom: none; }
                 button {
                     background: white; color: black; border: none; padding: 1.2rem 3rem;
                     font-size: 1.2rem; font-weight: 900; border-radius: 0.5rem; cursor: pointer;
                     font-family: 'Outfit', sans-serif; box-shadow: 0 0 20px rgba(255,255,255,0.3);
-                    transition: transform 0.2s; -webkit-tap-highlight-color: transparent;
+                    transition: transform 0.2s; -webkit-tap-highlight-color: transparent; width: 100%;
                 }
-                @media (min-width: 600px) { h1 { font-size: 4rem; } p { font-size: 1.2rem; } }
+                @media (min-width: 600px) { h1 { font-size: 4rem; } }
                 button:hover { transform: scale(1.05); }
                 button:active { transform: scale(0.95); }
             </style>
-            <div class="overlay-content"><h1>${title}</h1><p>${subtext}</p><button id="actionBtn">${isStart ? 'INITIATE' : 'REBOOT'}</button></div>`;
+            <div class="overlay-content">
+                <h1>${title}</h1>
+                ${content}
+            </div>`;
         
         const btn = this.shadowRoot.getElementById('actionBtn');
+        const input = this.shadowRoot.getElementById('nicknameInput');
+        
         btn.onclick = (e) => {
             e.stopPropagation();
+            let nickname = "PILOT";
+            if (isStart && input && input.value.trim()) {
+                nickname = input.value.trim().toUpperCase();
+            }
             this.style.visibility = 'hidden';
             this.style.display = 'none';
             if (isStart && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
-            callback();
+            callback(nickname);
         };
         this.style.visibility = 'visible';
         this.style.display = 'flex';
@@ -131,6 +188,7 @@ class Game {
         this.ctx = this.canvas.getContext('2d');
         this.hud = document.getElementById('hud');
         this.overlay = document.getElementById('overlay');
+        this.nickname = "PILOT";
         
         this.resize();
         window.addEventListener('resize', () => this.resize());
@@ -143,7 +201,10 @@ class Game {
         window.addEventListener('pointermove', updatePointer);
         
         this.init();
-        if (this.overlay) this.overlay.show('start', () => this.start());
+        if (this.overlay) this.overlay.show('start', (name) => {
+            this.nickname = name;
+            this.start();
+        });
     }
 
     init() {
@@ -177,6 +238,15 @@ class Game {
         this.update(dt);
         this.draw();
         requestAnimationFrame((t) => this.gameLoop(t));
+    }
+
+    updateLeaderboard() {
+        let leaderboard = JSON.parse(localStorage.getItem('rainbowOrbitLeaderboard') || '[]');
+        leaderboard.push({ name: this.nickname, score: this.score });
+        leaderboard.sort((a, b) => b.score - a.score);
+        leaderboard = leaderboard.slice(0, 10);
+        localStorage.setItem('rainbowOrbitLeaderboard', JSON.stringify(leaderboard));
+        return leaderboard;
     }
 
     update(dt) {
@@ -230,7 +300,7 @@ class Game {
             } else if (dist < this.core.radius + 10) {
                 if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
                     this.score += 10; this.totalMerges++; 
-                    if (this.score < 200) this.core.radius *= 1.05; // Growth limit at score 200
+                    if (this.score < 170) this.core.radius *= 1.05; // Growth limit at score 170
                     if (this.currentSpeed < 340) this.currentSpeed += 2.5; // Speed plateau
                     this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
                     if (this.core.colorIndex === 0) this.stage++;
@@ -238,7 +308,8 @@ class Game {
                     if (navigator.vibrate) navigator.vibrate(40);
                 } else {
                     this.running = false;
-                    if (this.overlay) this.overlay.show('gameover', () => this.start(), this.score);
+                    const leaderboard = this.updateLeaderboard();
+                    if (this.overlay) this.overlay.show('gameover', () => this.start(), this.score, leaderboard);
                     return;
                 }
             } else if (e.isReflected && (e.x < -200 || e.x > this.canvas.width + 200 || e.y < -200 || e.y > this.canvas.height + 200)) {
