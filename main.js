@@ -89,19 +89,25 @@ if (!customElements.get('game-hud')) customElements.define('game-hud', GameHUD);
 if (!customElements.get('game-overlay')) customElements.define('game-overlay', GameOverlay);
 
 class Enemy {
-    constructor(canvas, targetColor, speed) {
+    constructor(canvas, targetColor, speed, requiredDistance = 0) {
         const radius = 10;
-        const side = Math.floor(Math.random() * 4);
-        const stagger = Math.random() * 150;
-        if (side === 0) { this.x = Math.random() * canvas.width; this.y = -radius - stagger; }
-        else if (side === 1) { this.x = canvas.width + radius + stagger; this.y = Math.random() * canvas.height; }
-        else if (side === 2) { this.x = Math.random() * canvas.width; this.y = canvas.height + radius + stagger; }
-        else { this.x = -radius - stagger; this.y = Math.random() * canvas.height; }
-
-        this.radius = radius;
         this.colorInfo = Math.random() < 0.4 ? targetColor : COLORS[Math.floor(Math.random() * COLORS.length)];
         this.isReflected = false;
-        this.angle = Math.atan2(canvas.height / 2 - this.y, canvas.width / 2 - this.x);
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        // Use circular spawn to ensure uniform distance calculation
+        const canvasDiagonal = Math.hypot(centerX, centerY);
+        const baseDistance = canvasDiagonal + radius + Math.random() * 50;
+        
+        this.distanceToCenter = Math.max(baseDistance, requiredDistance);
+        const angleFromCenter = Math.random() * Math.PI * 2;
+        
+        this.x = centerX + Math.cos(angleFromCenter) * this.distanceToCenter;
+        this.y = centerY + Math.sin(angleFromCenter) * this.distanceToCenter;
+
+        this.radius = radius;
+        this.angle = Math.atan2(centerY - this.y, centerX - this.x);
         this.vx = Math.cos(this.angle) * speed;
         this.vy = Math.sin(this.angle) * speed;
     }
@@ -148,6 +154,7 @@ class Game {
         this.enemies = []; this.score = 0; this.stage = 1; this.totalMerges = 0; this.gameTime = 0;
         this.running = false; this.spawnTimer = 0; this.spawnRate = 0.7;
         this.currentSpeed = 300;
+        this.lastEnemyDistance = 0;
         if (this.hud) this.hud.update(this.score, this.stage, COLORS[0].name, this.currentSpeed);
     }
 
@@ -177,17 +184,69 @@ class Game {
         this.gameTime += dt;
         this.core.pulse += 3 * dt;
         
-        let inc = this.currentSpeed >= 700 ? 2 : (this.currentSpeed >= 600 ? 4 : (this.currentSpeed >= 500 ? 8 : 15));
-        this.currentSpeed += inc * dt;
+        // Piecewise speed increase
+        let increment = 15;
+        if (this.currentSpeed >= 700) increment = 2; 
+        else if (this.currentSpeed >= 600) increment = 4;
+        else if (this.currentSpeed >= 500) increment = 8;
         
+        this.currentSpeed += increment * dt;
+        const speed = this.currentSpeed;
+
+        // Track distance of last enemy
+        this.lastEnemyDistance -= speed * dt;
+        if (this.lastEnemyDistance < 0) this.lastEnemyDistance = 0;
+
         this.spawnTimer += dt;
         if (this.spawnTimer > this.spawnRate) {
-            this.enemies.push(new Enemy(this.canvas, COLORS[this.core.colorIndex], this.currentSpeed));
+            // Force a 0.2s minimum gap by adjusting spawn distance
+            const requiredDist = this.lastEnemyDistance + (0.2 * speed);
+            const newEnemy = new Enemy(this.canvas, COLORS[this.core.colorIndex], speed, requiredDist);
+            this.enemies.push(newEnemy);
+            this.lastEnemyDistance = newEnemy.distanceToCenter;
+
             this.spawnTimer = 0;
             this.spawnRate = Math.max(0.2, 0.7 - (this.totalMerges * 0.02) - (this.gameTime * 0.008));
         }
 
+        // Direct follow with minimal smoothing for "stickiness"
         let angleDiff = this.targetShieldAngle - this.shield.angle;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        
+        // High multiplier (50) for ultra-responsive feel
+        this.shield.angle += angleDiff * 50 * dt;
+
+        this.shield.distance = this.core.radius + 20;
+
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const e = this.enemies[i]; e.update(dt, this.currentSpeed);
+            const dist = Math.hypot(e.x - this.center.x, e.y - this.center.y);
+            let diff = Math.atan2(e.y - this.center.y, e.x - this.center.x) - this.shield.angle;
+            while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
+
+            if (!e.isReflected && Math.abs(diff) < this.shield.arcLength / 2 && dist < this.shield.distance + 15 && dist > this.shield.distance - 15) {
+                e.isReflected = true; e.angle += Math.PI;
+                if (navigator.vibrate) navigator.vibrate(20);
+            } else if (dist < this.core.radius + e.radius) {
+                if (e.colorInfo.name === COLORS[this.core.colorIndex].name) {
+                    this.score += 10; this.totalMerges++; this.core.radius *= 1.03;
+                    this.currentSpeed += 10;
+                    this.core.colorIndex = (this.core.colorIndex + 1) % COLORS.length;
+                    if (this.core.colorIndex === 0) this.stage++;
+                    this.enemies.splice(i, 1);
+                    if (navigator.vibrate) navigator.vibrate(40);
+                } else {
+                    this.running = false;
+                    if (this.overlay) this.overlay.show('gameover', () => this.start(), this.score);
+                    return;
+                }
+            } else if (e.isReflected && (e.x < -200 || e.x > this.canvas.width + 200 || e.y < -200 || e.y > this.canvas.height + 200)) {
+                this.enemies.splice(i, 1);
+            }
+        }
+        if (this.hud) this.hud.update(this.score, this.stage, COLORS[this.core.colorIndex].name, this.currentSpeed);
+    }
         while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
         while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
         this.shield.angle += angleDiff * 50 * dt;
