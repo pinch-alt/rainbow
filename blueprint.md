@@ -41,3 +41,7 @@
 *   **Initial Core Size Reduction:** Reduced the starting radius of the central core from 25 to **18** for a more challenging start.
 *   **Dynamic Core Growth:** Each successful merge now increases the core radius by **5%** (`*= 1.05`), providing a more visible sense of progression.
 *   **Precision Shield Collision:** Enhanced the collision detection algorithm. The angular check now incorporates the enemy's radius relative to the shield distance (`arcLength / 2 + atan(radius / distance)`), ensuring hits at the very tips of the shield are accurately reflected.
+
+### Step 8: Conditional Difficulty Scaling (Requested)
+*   **Speed-Triggered Spawn Reduction:** At speed **290+**, spawn frequency is reduced to 80% of the original (interval increased to **1.09375**). Below 290, the rate remains at **0.875**.
+*   **Speed Plateau:** At speed **350+**, all speed increases (time-based progression and merge bonuses) are completely halted to maintain a constant challenge level.
