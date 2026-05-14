@@ -45,12 +45,14 @@
 *   **Dynamic Core Growth:** Each successful merge now increases the core radius by **5%** (`*= 1.05`), providing a more visible sense of progression.
 *   **Precision Shield Collision:** Enhanced the collision detection algorithm. The angular check now incorporates the enemy's radius relative to the shield distance (`arcLength / 2 + atan(radius / distance)`), ensuring hits at the very tips of the shield are accurately reflected.
 
-### Step 8: Conditional Difficulty Scaling (Requested)
-*   **Speed-Triggered Spawn Reduction:** At speed **360+**, the base spawn interval is set to **0.5**. At speed **320-360**, it is **0.6**. Between 290 and 320, it is **1.3**. Below 290, it remains at **0.875**.
-*   **Speed Plateau:** At speed **450+**, all speed increases (time-based progression and merge bonuses) are halted to maintain a constant physical challenge level.
-*   **Core Size Plateau:** At score **170+**, the central core's size growth is halted to prevent it from becoming too large and making the game too difficult/easy.
-*   **Time-Based Challenge:** Starting from the moment speed hits **450**, a timer begins. Every **30 seconds** elapsed after this point, the spawn interval decreases by **0.1**, creating an aggressive progressive challenge even at the speed plateau.
-*   **Minimum Spacing:** A safety buffer ensures enemies are spaced by at least **0.25 seconds** of travel time, preventing impossible overlapping clusters.
+### Step 8: Conditional Difficulty Scaling (Updated)
+*   **Speed-Triggered Spawn Intervals:**
+    *   At speed **360**, the spawn interval is set to **0.7s**.
+    *   At speed **430**, the spawn interval is set to **0.6s**.
+    *   At speed **450**, the spawn interval is set to **0.5s**.
+*   **Aggressive Late-Game Challenge:** Starting from speed **450**, every **3 seconds** elapsed, the spawn interval decreases by **0.01s** until it reaches a minimum of **0.35s**.
+*   **Simultaneous Arrival Prevention:** A robust spacing logic ensures that balls never reach the central core at the same time by maintaining a minimum arrival time gap.
+*   **Speed & Core Plateau:** Speed increases halt at **450+** and core growth halts at score **170+** to maintain gameplay balance.
 
 ### Step 9: Nickname & Leaderboard (Requested)
 *   **Nickname Input:** Added a text input field to the start screen with a 10-character limit.
